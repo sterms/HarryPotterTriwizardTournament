@@ -76,6 +76,7 @@
         this.range = 14;
         this.lightRange = 5;
         this.scale = (this.width + this.height) / 1200;
+		this.doOnce = 0;
       }
 
       Camera.prototype.render = function(player, map) {
@@ -103,6 +104,7 @@
 
       Camera.prototype.drawColumns = function(player, map) {
         this.ctx.save();
+		map.updateEnemies(player);
         for (var column = 0; column < this.resolution; column++) {
           var x = column / this.resolution - 0.5;
           var angle = Math.atan2(x, this.focalLength);
@@ -127,15 +129,22 @@
         var width = Math.ceil(this.spacing);
         var hit = -1;
 
-        while (++hit < ray.length && ray[hit].height <= 0);
+        while (++hit < ray.length && ray[hit].height <= 0);			//This loop runs until it finds the first section of ray with a height not 0.
 
-        for (var s = ray.length - 1; s >= 0; s--) {
+        for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
           var step = ray[s];
           var rainDrops = Math.pow(Math.random(), 3) * s;
           var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
 
-          if (s === hit) {
-			//Find what the hell is hit? Wouldn't it try to render a wall on every grid snap?  
+		  /* Need to implement: Need to take the 'Line' the enemy point is on, and find the intersection with the current ray.
+		  then need to measure this distance if it is less than the wall behind it, and also if it is within a proper width of enemy sprite sprite.
+		  hard-code line for now, use angles later. Deal with width of sprite a bit later.
+		  */
+		  
+		  
+		  
+          if (s === hit) {								//When it finds the one closest to the player, it generates the wall.
+			if(this.doOnce == 0) console.log(ray);
             var textureX = Math.floor(texture.width * step.offset);
 			//Run a .get here on the step.x step.y to get wall, texture from wall.
             var wall = this.project(step.height, angle, step.distance);
@@ -152,6 +161,7 @@
           ctx.globalAlpha = 0.15;
           while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
         }
+		this.doOnce = 1;
       };
 
       Camera.prototype.project = function(height, angle, distance) {

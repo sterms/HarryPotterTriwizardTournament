@@ -1,14 +1,35 @@
+function Enemy(x, y) {
+	this.height = .6;
+	this.x = x;
+	this.y = y;
+	this.distanceFromPlayer = 0;
+};
+
+Enemy.prototype.setDistance = function(origin) {
+	this.distanceFromPlayer = Math.sqrt(((this.x - origin.x) * (this.x - origin.x)) + ((this.y - origin.y) *(this.y - origin.y)));
+};
+
 function Map(size) {
         this.size = size;
         this.wallGrid = new Uint8Array(size * size);
         this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
 		this.wallTextures = [];
         this.light = 0;
-		
+		this.enemies = [];		
 		this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
       }
 	  
-
+		Map.prototype.addEnemy = function(enemy) {
+			var newEntry = new Enemy(enemy.x, enemy.y);
+			this.enemies.push(newEntry);
+		};
+		
+		Map.prototype.updateEnemies = function(origin) {
+			for(var i = 0; i < this.enemies.length; i++) {
+				this.enemies[i].setDistance(origin);
+			}
+		};
+	  
       Map.prototype.get = function(x, y) {
         x = Math.floor(x);
         y = Math.floor(y);
@@ -107,6 +128,7 @@ function Map(size) {
 		################		240-255
 		
 		*/
+		this.addEnemy({x: 3.5, y: 1.5});
 	  };
 
       Map.prototype.cast = function(point, angle, range) {
