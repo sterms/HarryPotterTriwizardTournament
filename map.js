@@ -16,7 +16,7 @@ function Map(size) {
 		this.wallTextures = [];
         this.light = 0;
 		this.enemies = [];		
-		this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
+		this.wallTextures.push(new ImageFile('assets/hedge.jpg', 2048, 2048));
       }
 	  
 		Map.prototype.addEnemy = function(enemy) {
