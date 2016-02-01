@@ -72,8 +72,8 @@
         if (controls.right) this.rotate(Math.PI * .8 * seconds);
         if (controls.forward) this.walk(2.5 * seconds, map);
         if (controls.backward) this.walk(-1.5 * seconds, map);
-		if (controls.strafeLeft) this.strafe(-.8 * seconds, map);
-		if (controls.strafeRight) this.strafe(.8 * seconds, map);
+		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
+		if (controls.strafeRight) this.strafe(1.5 * seconds, map);
       };      
 
       function Camera(canvas, resolution, focalLength) {
