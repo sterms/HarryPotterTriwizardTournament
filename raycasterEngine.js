@@ -54,8 +54,8 @@
       Player.prototype.walk = function(distance, map) {
         var dx = Math.cos(this.direction) * distance;
         var dy = Math.sin(this.direction) * distance;
-        if (map.get(this.x + dx, this.y) <= 0) this.x += dx;
-        if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
+        if (map.getWall(this.x + dx, this.y).height <= 0) this.x += dx;
+        if (map.getWall(this.x, this.y + dy).height <= 0) this.y += dy;
         this.paces += distance;
       };
 	  
@@ -114,7 +114,7 @@
 
       Camera.prototype.drawColumns = function(player, map) {
         this.ctx.save();
-		map.updateEnemies(player);
+
         for (var column = 0; column < this.resolution; column++) {
           var x = column / this.resolution - 0.5;
           var angle = Math.atan2(x, this.focalLength);
