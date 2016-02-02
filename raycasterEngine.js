@@ -132,39 +132,61 @@
         this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
       };
 
-      Camera.prototype.drawColumn = function(column, ray, angle, map) {
+Camera.prototype.drawColumn = function(column, ray, angle, map) {
         var ctx = this.ctx;
-        var texture = map.wallTextures[0];
+        //var texture = map.wallTextures[0];
         var left = Math.floor(column * this.spacing);
         var width = Math.ceil(this.spacing);
-        var hit = -1;
+        var hitWall = -1;
+		var hitObject = -1;
 
-        while (++hit < ray.length && ray[hit].height <= 0);			//This loop runs until it finds the first section of ray with a height not 0.
+        while (++hitWall < ray.length && ray[hitWall].wallHeight <= 0);	//This loop runs until it finds the first section of ray with a height not 0.
+		while (++hitObject < ray.length && ray[hitObject].objectHeight <= 0);
 
+		
         for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
           var step = ray[s];
           var rainDrops = Math.pow(Math.random(), 3) * s;
-          var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
-
-		  /* Need to implement: Need to take the 'Line' the enemy point is on, and find the intersection with the current ray.
-		  then need to measure this distance if it is less than the wall behind it, and also if it is within a proper width of enemy sprite sprite.
-		  hard-code line for now, use angles later. Deal with width of sprite a bit later.
-		  */
+          var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);	  
 		  
 		  
-		  
-          if (s === hit) {								//When it finds the one closest to the player, it generates the wall.
-			if(this.doOnce == 0) console.log(ray);
-            var textureX = Math.floor(texture.width * step.offset);
+          if (s === hitWall) {				//When it finds the one closest to the player, it generates the wall.
+			var texture = map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
+			//if(this.doOnce == 0) console.log(ray); console.log("Hit wall: " + hitWall);
+            //var textureX = Math.floor(texture.width * step.offset);
+			var textureX = Math.floor(map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * step.offset);
 			//Run a .get here on the step.x step.y to get wall, texture from wall.
-            var wall = this.project(step.height, angle, step.distance);
+            var wall = this.project(step.wallHeight, angle, step.distance);
 
+			
             ctx.globalAlpha = 1;
             ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
             
             ctx.fillStyle = '#000000';
             ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
-            ctx.fillRect(left, wall.top, width, wall.height);
+            ctx.fillRect(left, wall.top, width, wall.height);	
+
+          }
+		  
+		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
+			var texture = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
+			//if(texture == null) console.log("Null Texture on sprite, " + Math.floor(ray[s].x) + ", " + Math.floor(ray[s].y));
+		  //if (this.doOnce == 0) console.log(ray); console.log("Hit Sprite: " + hitObject);
+            //var textureX = Math.floor(texture.width * step.offset);
+			if(texture != null) {
+				var textureX = Math.floor(map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * step.offset);
+				//Run a .get here on the step.x step.y to get wall, texture from wall.
+				var object = this.project(step.objectHeight, angle, step.distance);
+				
+				ctx.globalAlpha = 1;
+				ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, object.top, width, object.height);
+				
+				ctx.fillStyle = '#000000';
+				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+				ctx.globalAlpha = 0;
+				ctx.fillRect(left, object.top, width, object.height);				
+			}
+
           }
           
           ctx.fillStyle = '#ffffff';
@@ -172,6 +194,16 @@
           while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
         }
 		this.doOnce = 1;
+      };
+
+      Camera.prototype.project = function(height, angle, distance) {
+        var z = distance * Math.cos(angle);
+        var wallHeight = this.height * height / z;
+        var bottom = this.height / 2 * (1 + 1 / z);
+        return {
+          top: bottom - wallHeight,
+          height: wallHeight
+        }; 
       };
 
       Camera.prototype.project = function(height, angle, distance) {
