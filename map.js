@@ -3,9 +3,10 @@ function Wall(texture, height) {
 	this.texture = texture;
 };
 
-function Object(texture, height) {
+function Object(texture, height, width) {
 	this.height = height;
 	this.texture = texture;
+	this.width = width;
 };
 
 
@@ -15,7 +16,7 @@ function Map(size) {
 		this.objectGrid = [];
 		for(var i = 0; i < size * size; i++) {
 			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
-			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/blank.jpg', 512, 512), 0));
+			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/blank.jpg', 512, 512), 0, 0));
 		}
         this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
         this.light = 0;	
@@ -111,8 +112,11 @@ function Map(size) {
 				  this.wallGrid[i].height = 1;
 			  }
 		  }
-			this.objectGrid[1 * this.size + 3].height = 1;
-			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 512);
+			this.objectGrid[1 * this.size + 3].height = .9;
+			this.objectGrid[1 * this.size + 3].width = .4;
+			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 256);
+			console.log("Sprite Output:");
+			console.log(this.objectGrid[1 * this.size + 3]);
 		 
 		/*
 		################		0-15
@@ -135,84 +139,6 @@ function Map(size) {
 		*/
 	  };
 
-  	  Map.prototype.buildIntroLevel = function() {
-		  var totalSize = this.size * this.size;
-		  for(var i = 0; i < totalSize; i++) {
-			  //Fill top and bottoms
-			  if(i >= 0 && i < this.size) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i >= totalSize-this.size && i < totalSize) {
-				  this.wallGrid[i].height = 1;  				  
-			  }
-			  //Fill edges.
-			  if(i % this.size == 0) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i % this.size == this.size-1) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  
-			  
-			  if(i >= 33 && i < 44) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i >= 66 && i < 75) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i >= 98 && i < 111) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 114) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  
-			  if(i == 130 || (i >= 132 && i <= 139)) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 146 || (i >= 148 && i <= 152) || i == 155) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  
-			  if(i == 162 || (i >= 164 && i <= 168) || i == 171) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 178 || (i >= 180 && i <= 184) || i == 187) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 194 || (i >= 196 && i <= 200) || i == 203) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 210 || (i >= 212 && i <= 216) || i == 219) {
-				  this.wallGrid[i].height = 1;
-			  }
-			  if(i == 235) {
-				  this.wallGrid[i].height = 1;
-			  }
-		  }
-			this.objectGrid[1 * this.size + 3].height = 1;
-			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 512);
-		 
-		/*
-		################		0-15
-		#			   #		16-31
-		############   #		32-47
-		#			   #		48-63
-		#	#######	   #		64-79
-		#			   #		80-95
-		#	############		96-111
-		#	#		   #		112-127
-		#	#	####   #		128-143
-		#	#	#  #   #		144-159
-		#	#	#  #   #		160-175
-		#	#	#  #   #		176-191
-		#	#	#  #   #		192-207
-		#	#	#  #   #		208-223
-		#		   #   #		224-239
-		################		240-255
-		
-		*/
-	  };
 
       Map.prototype.cast = function(point, angle, range) {
 		//console.log("Inside Cast:");
