@@ -1,8 +1,8 @@
 	var CIRCLE = Math.PI * 2;
 
       function Controls() {
-        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward' };
-        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false };
+        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight'};
+        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false};
         document.addEventListener('keydown', this.onKey.bind(this, true), false);
         document.addEventListener('keyup', this.onKey.bind(this, false), false);
         document.addEventListener('touchstart', this.onTouch.bind(this), false);
@@ -19,7 +19,7 @@
       };
 
       Controls.prototype.onTouchEnd = function(e) {
-        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false };
+        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false };
         e.preventDefault();
         e.stopPropagation();
       };
@@ -58,12 +58,22 @@
         if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
         this.paces += distance;
       };
+	  
+	  Player.prototype.strafe = function(distance, map) {
+		var dx = Math.cos(this.direction + Math.PI / 2) * distance;
+        var dy = Math.sin(this.direction + Math.PI / 2) * distance;
+        if (map.get(this.x + dx, this.y) <= 0) this.x += dx;
+        if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
+        this.paces += distance;
+	  }
 
       Player.prototype.update = function(controls, map, seconds) {
-        if (controls.left) this.rotate(-Math.PI * seconds);
-        if (controls.right) this.rotate(Math.PI * seconds);
-        if (controls.forward) this.walk(3 * seconds, map);
-        if (controls.backward) this.walk(-3 * seconds, map);
+        if (controls.left) this.rotate(-Math.PI * .8 * seconds);
+        if (controls.right) this.rotate(Math.PI * .8 * seconds);
+        if (controls.forward) this.walk(2.5 * seconds, map);
+        if (controls.backward) this.walk(-1.5 * seconds, map);
+		if (controls.strafeLeft) this.strafe(-.8 * seconds, map);
+		if (controls.strafeRight) this.strafe(.8 * seconds, map);
       };      
 
       function Camera(canvas, resolution, focalLength) {
