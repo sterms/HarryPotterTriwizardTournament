@@ -2,14 +2,19 @@
 
       function Controls() {
         this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight'};
-        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false};
+        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false, 'fire': false};
         document.addEventListener('keydown', this.onKey.bind(this, true), false);
         document.addEventListener('keyup', this.onKey.bind(this, false), false);
         document.addEventListener('touchstart', this.onTouch.bind(this), false);
         document.addEventListener('touchmove', this.onTouch.bind(this), false);
         document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
+		document.addEventListener('click', this.onClick.bind(this), false);
       }
 
+	  Controls.prototype.onClick = function(e) {
+			this.states['fire'] = true;
+      };
+	  
       Controls.prototype.onTouch = function(e) {
         var t = e.touches[0];
         this.onTouchEnd(e);
@@ -74,7 +79,8 @@
         if (controls.backward) this.walk(-1.5 * seconds, map);
 		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
 		if (controls.strafeRight) this.strafe(1.5 * seconds, map);
-      };      
+      }; 
+
 
       function Camera(canvas, resolution, focalLength) {
         this.ctx = canvas.getContext('2d');
@@ -94,6 +100,9 @@
         this.drawColumns(player, map);
         this.drawWeapon(player.weapon, player.paces);
       };
+	  
+	  Camera.prototype.fireWeapon = function(player, map) {
+	  }
 
       Camera.prototype.drawSky = function(direction, sky, ambient) {
         var width = sky.width * (this.height / sky.height) * 2;
@@ -121,6 +130,9 @@
           var ray = map.cast(player, player.direction + angle, this.range);
           this.drawColumn(column, ray, angle, map);
         }
+		
+			this.fireWeapon(player, map);
+		
         this.ctx.restore();
       };
 
