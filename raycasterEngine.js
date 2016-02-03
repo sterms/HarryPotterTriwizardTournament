@@ -9,11 +9,24 @@
         document.addEventListener('touchmove', this.onTouch.bind(this), false);
         document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
 		document.addEventListener('click', this.onClick.bind(this), false);
+		document.addEventListener('mousemove', this.onMouse.bind(this), false);
       }
 
 	  Controls.prototype.onClick = function(e) {
 			this.states['fire'] = true;
       };
+	  
+	  Controls.prototype.onMouse = function(e) {
+		if(e.clientX < (window.innerWidth / 10)) {
+			this.states['left'] = true;
+		} else if (e.clientX > (window.innerWidth / 10)*9) {
+			this.states['right'] = true;
+		} else {
+			this.states['left'] = false;
+			this.states['right'] = false;
+		}
+		
+	  }
 	  
       Controls.prototype.onTouch = function(e) {
         var t = e.touches[0];
@@ -73,8 +86,8 @@
 	  }
 
       Player.prototype.update = function(controls, map, seconds) {
-        if (controls.left) this.rotate(-Math.PI * .8 * seconds);
-        if (controls.right) this.rotate(Math.PI * .8 * seconds);
+        if (controls.left) this.rotate(-Math.PI * .3 * seconds);
+        if (controls.right) this.rotate(Math.PI * .3 * seconds);
         if (controls.forward) this.walk(2.5 * seconds, map);
         if (controls.backward) this.walk(-1.5 * seconds, map);
 		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
