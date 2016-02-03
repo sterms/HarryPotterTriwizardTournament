@@ -45,17 +45,12 @@ Animation.prototype.isDone = function () {
 
 
 
-AM.queueDownload("./img/RobotUnicorn.png");
-AM.queueDownload("./img/guy.png");
-AM.queueDownload("./img/mushroomdude.png");
-AM.queueDownload("./img/runningcat.png");
-AM.queueDownload("./img/notthere.png");
+AM.queueDownload("./assets/IntroScreen.png");
+
 
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
     var ctx = canvas.getContext("2d");
-
-//    var img = AM.getAsset("./img/mushroomdude.png");
 
     var gameEngine = new GameEngine();
     gameEngine.init(ctx);
