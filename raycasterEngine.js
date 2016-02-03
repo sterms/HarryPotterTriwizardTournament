@@ -114,7 +114,7 @@
 
       Camera.prototype.drawColumns = function(player, map) {
         this.ctx.save();
-
+		
         for (var column = 0; column < this.resolution; column++) {
           var x = column / this.resolution - 0.5;
           var angle = Math.atan2(x, this.focalLength);
@@ -152,7 +152,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		  
           if (s === hitWall) {				//When it finds the one closest to the player, it generates the wall.
 			var texture = map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
-			//if(this.doOnce == 0) console.log(ray); console.log("Hit wall: " + hitWall);
+			if(this.doOnce == 0) console.log(ray); 
             //var textureX = Math.floor(texture.width * step.offset);
 			var textureX = Math.floor(map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * step.offset);
 			//Run a .get here on the step.x step.y to get wall, texture from wall.
@@ -170,22 +170,21 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		  
 		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
 			var texture = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
-			//if(texture == null) console.log("Null Texture on sprite, " + Math.floor(ray[s].x) + ", " + Math.floor(ray[s].y));
-		  //if (this.doOnce == 0) console.log(ray); console.log("Hit Sprite: " + hitObject);
-            //var textureX = Math.floor(texture.width * step.offset);
+
 			if(texture != null) {
 				var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
 				var textureX = Math.floor(map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * (step.offset - offset));
-				//Run a .get here on the step.x step.y to get wall, texture from wall.
+
 				var object = this.project(step.objectHeight, angle, step.distance);				
-
-
+	
 				ctx.globalAlpha = 1;
 				
+
+
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-				//if(step.offset >= offset) {									
+								
 					ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, object.top, width, object.height);
-				//}
+
 				
 				ctx.fillStyle = '#000000';
 				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
@@ -212,15 +211,6 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
         }; 
       };
 
-      Camera.prototype.project = function(height, angle, distance) {
-        var z = distance * Math.cos(angle);
-        var wallHeight = this.height * height / z;
-        var bottom = this.height / 2 * (1 + 1 / z);
-        return {
-          top: bottom - wallHeight,
-          height: wallHeight
-        }; 
-      };
 
       function GameLoop() {
         this.frame = this.frame.bind(this);

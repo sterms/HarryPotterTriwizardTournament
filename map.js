@@ -16,7 +16,8 @@ function Map(size) {
 		this.objectGrid = [];
 		for(var i = 0; i < size * size; i++) {
 			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
-			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/blank.jpg', 512, 512), 0, 0));
+			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
+			//Removed 'Blank Texture'. Only 1 enemy type now though.
 		}
         this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
         this.light = 0;	
