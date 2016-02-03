@@ -1,5 +1,5 @@
 var AM = new AssetManager();
-
+/*
 function Animation(spriteSheet, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
     this.frameWidth = frameWidth;
@@ -42,23 +42,29 @@ Animation.prototype.currentFrame = function () {
 Animation.prototype.isDone = function () {
     return (this.elapsedTime >= this.totalTime);
 }
-
+*/
 
 
 AM.queueDownload("./assets/IntroScreen.png");
 
-
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
     var ctx = canvas.getContext("2d");
+    
+    //Function to make the splash screen disappear when it is clicked
+    function clicked() {
+        document.getElementById("splashscreen").style.display = "none"; //splash screen disappear
+        document.getElementById("gamescreen").style.display = "block"; //game screen appear
+    }
+        
+    //Listen for click event to make splash screen go away
+    document.getElementById("splashscreen").addEventListener("click", clicked, false);
 
     var gameEngine = new GameEngine();
     gameEngine.init(ctx);
     gameEngine.start();
-	var raycaster = new RayCasterEngine();
-	raycaster.run();
-
-
-
+    var raycaster = new RayCasterEngine();
+    raycaster.run();
+    
     console.log("All Done!");
 });
