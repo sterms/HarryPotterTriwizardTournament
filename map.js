@@ -1,113 +1,123 @@
-function Enemy(x, y) {
-	this.height = .6;
-	this.x = x;
-	this.y = y;
-	this.distanceFromPlayer = 0;
+function Wall(texture, height) {
+	this.height = height;
+	this.texture = texture;
 };
 
-Enemy.prototype.setDistance = function(origin) {
-	this.distanceFromPlayer = Math.sqrt(((this.x - origin.x) * (this.x - origin.x)) + ((this.y - origin.y) *(this.y - origin.y)));
+function Object(texture, height, width) {
+	this.height = height;
+	this.texture = texture;
+	this.width = width;
 };
+
 
 function Map(size) {
         this.size = size;
-        this.wallGrid = new Uint8Array(size * size);
+        this.wallGrid = [];
+		this.objectGrid = [];
+		for(var i = 0; i < size * size; i++) {
+			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
+			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
+			//Removed 'Blank Texture'. Only 1 enemy type now though.
+		}
         this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
-		this.wallTextures = [];
-        this.light = 0;
-		this.enemies = [];		
-		this.wallTextures.push(new ImageFile('assets/hedge.jpg', 2048, 2048));
+        this.light = 0;	
+		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
       }
 	  
-		Map.prototype.addEnemy = function(enemy) {
-			var newEntry = new Enemy(enemy.x, enemy.y);
-			this.enemies.push(newEntry);
-		};
-		
-		Map.prototype.updateEnemies = function(origin) {
-			for(var i = 0; i < this.enemies.length; i++) {
-				this.enemies[i].setDistance(origin);
-			}
-		};
+	Map.prototype.getDistance = function(p1, p2) {
+		return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) *(p1.y - p2.y)));
+	};
 	  
-      Map.prototype.get = function(x, y) {
+	  Map.prototype.getSlopeAndIntercept = function(x1, y1, x2, y2) {
+			this.slope = (y1 - y2)/(x1 - x2);
+			this.intercept = y1 - (slope * x1);
+		  return ({m: slope, b: intercept});		  
+	  };
+	  
+	  Map.prototype.getIntersection = function(l1, l2) {		  
+		  this.x = (l2.b - l1.b)/(l1.m - l2.m);
+		  this.y = l1.m * this.x + l1.b;
+		  
+		  console.log(this.x + ", " + this.y);
+		  return ({x: this.x, y: this.y});
+	  };	  
+
+	  
+      Map.prototype.getWall = function(x, y) {
         x = Math.floor(x);
         y = Math.floor(y);
         if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
         return this.wallGrid[y * this.size + x];
       };
-
 	  
-	  
-      Map.prototype.randomize = function() {
-		var totalSize = this.size * this.size;
-        for (var i = 0; i < this.size * this.size; i++) {
-          //this.wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
-		  if(i % 2 == 0) {
-			  this.wallGrid[i] = 1;
-		  } else {
-			  this.wallGrid[i] = 0;
-		  }
-        }
+	  Map.prototype.getObject = function(x, y) {
+        x = Math.floor(x);
+        y = Math.floor(y);
+        if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
+        return this.objectGrid[y * this.size + x];
       };
+	  
 	  
 	  Map.prototype.buildIntroLevel = function() {
 		  var totalSize = this.size * this.size;
 		  for(var i = 0; i < totalSize; i++) {
 			  //Fill top and bottoms
 			  if(i >= 0 && i < this.size) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i >= totalSize-this.size && i < totalSize) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;  				  
 			  }
 			  //Fill edges.
 			  if(i % this.size == 0) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i % this.size == this.size-1) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  
 			  
 			  if(i >= 33 && i < 44) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i >= 66 && i < 75) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i >= 98 && i < 111) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 114) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  
 			  if(i == 130 || (i >= 132 && i <= 139)) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 146 || (i >= 148 && i <= 152) || i == 155) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  
 			  if(i == 162 || (i >= 164 && i <= 168) || i == 171) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 178 || (i >= 180 && i <= 184) || i == 187) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 194 || (i >= 196 && i <= 200) || i == 203) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 210 || (i >= 212 && i <= 216) || i == 219) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
 			  if(i == 235) {
-				  this.wallGrid[i] = 1;
+				  this.wallGrid[i].height = 1;
 			  }
-			  
 		  }
-		  
+			this.objectGrid[1 * this.size + 3].height = .9;
+			this.objectGrid[1 * this.size + 3].width = .4;
+			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 256);
+			console.log("Sprite Output:");
+			console.log(this.objectGrid[1 * this.size + 3]);
 		 
 		/*
 		################		0-15
@@ -128,8 +138,8 @@ function Map(size) {
 		################		240-255
 		
 		*/
-		this.addEnemy({x: 3.5, y: 1.5});
 	  };
+
 
       Map.prototype.cast = function(point, angle, range) {
 		//console.log("Inside Cast:");
@@ -138,7 +148,7 @@ function Map(size) {
         var cos = Math.cos(angle);
         var noWall = { length2: Infinity };
 
-        return ray({ x: point.x, y: point.y, height: 0, distance: 0 });
+        return ray({ x: point.x, y: point.y, wallHeight: 0, objectHeight: 0, distance: 0 });
 
         function ray(origin) {
 			//console.log("Inside Ray:");
@@ -169,7 +179,8 @@ function Map(size) {
         function inspect(step, shiftX, shiftY, distance, offset) {
           var dx = cos < 0 ? shiftX : 0;
           var dy = sin < 0 ? shiftY : 0;
-          step.height = self.get(step.x - dx, step.y - dy);
+          step.wallHeight = self.getWall(step.x - dx, step.y - dy).height;
+		  step.objectHeight = self.getObject(step.x - dx, step.y - dy).height;
           step.distance = distance + Math.sqrt(step.length2);
           if (shiftX) step.shading = cos < 0 ? 2 : 0;
           else step.shading = sin < 0 ? 2 : 1;
