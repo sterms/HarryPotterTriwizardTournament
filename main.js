@@ -46,6 +46,11 @@ Animation.prototype.isDone = function () {
 
 
 AM.queueDownload("./assets/IntroScreen.png");
+AM.queueDownload("./assets/dementor.png");
+AM.queueDownload("./assets/hedge.jpg");
+AM.queueDownload("./assets/northern.jpg");
+AM.queueDownload("./assets/wandhand.png");
+AM.queueDownload("./assets/wandhand1.png");
 
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
@@ -60,9 +65,9 @@ AM.downloadAll(function () {
     //Listen for click event to make splash screen go away
     document.getElementById("splashscreen").addEventListener("click", clicked, false);
 
-    var gameEngine = new GameEngine();
-    gameEngine.init(ctx);
-    gameEngine.start();
+	var gameEngine = new GameEngine();
+	gameEngine.init(ctx);
+	gameEngine.start();
     var raycaster = new RayCasterEngine();
     raycaster.run();
     
