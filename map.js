@@ -19,7 +19,7 @@ function Map(size) {
 			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
 			//Removed 'Blank Texture'. Only 1 enemy type now though.
 		}
-        this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
+        this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
         this.light = 0;	
 		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
       }
