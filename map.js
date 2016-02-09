@@ -21,8 +21,13 @@ function Map(size) {
 		}
         this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
         this.light = 0;	
+		this.weather = 'RAIN'; 
 		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
       }
+	  
+	Map.prototype.setWeather = function(weather) {
+		this.weather = weather;
+	};  
 	  
 	Map.prototype.getDistance = function(p1, p2) {
 		return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) *(p1.y - p2.y)));

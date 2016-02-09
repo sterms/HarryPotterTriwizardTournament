@@ -171,8 +171,10 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		
         for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
           var step = ray[s];
-          var rainDrops = Math.pow(Math.random(), 3) * s;
-          var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);	  
+		  if(map.weather == 'RAIN') var weatherDebris = Math.pow(Math.random(), 3) * s;
+		  else if(map.weather == 'SNOW') var weatherDebris = 2;
+		  else if(map.weather == 'TOXIC') var weatherDebris = 3;
+          var weather = (weatherDebris > 0) && this.project(0.1, angle, step.distance);	  
 		  
 		  
           if (s === hitWall) {				//When it finds the one closest to the player, it generates the wall.
@@ -221,7 +223,15 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
           
           ctx.fillStyle = '#ffffff';
           ctx.globalAlpha = 0.15;
-          while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
+		  if(map.weather == 'RAIN') {
+			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
+		  } else if (map.weather == 'SNOW') {
+			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 3, 3); 
+		  } else if (map.weather == 'TOXIC') {
+			  ctx.fillStyle = '#4DFE15';
+			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
+		  }
+
         }
 		this.doOnce = 1;
       };
@@ -269,6 +279,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		var loop = new GameLoop();
 
 		map.buildIntroLevel();
+		map.setWeather('RAIN');
       
 		loop.start(function frame(seconds) {
 			map.update(seconds);
