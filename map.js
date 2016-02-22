@@ -37,13 +37,8 @@ Projectile.prototype.update = function(point, map) {
 	if(this.angle != -1) {
 		//console.log("inside projectile update");
 		this.distance = map.getDistance({x: this.x, y: this.y}, {x: point.x, y: point.y});
-		if(this.line.m >= 0) {
-			this.x += this.speed;
-		} else {
-			this.x -= this.speed;
-		}
-
-		this.y = this.line.m * this.x + this.line.b;
+		this.x += this.speed * Math.cos(this.angle);
+		this.y += this.speed * Math.sin(this.angle);
 		
 		if(map.getWall(Math.floor(this.x), Math.floor(this.y)).height > 0) {
 			console.log("Projectile hit wall! at " + Math.floor(this.x) + ", " + Math.floor(this.y));
@@ -53,7 +48,7 @@ Projectile.prototype.update = function(point, map) {
 			console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
 		} 
-		this.scaleFactor *= .25;
+		this.scaleFactor *= .5;
 	}
 }
 
