@@ -1,5 +1,51 @@
 	var CIRCLE = Math.PI * 2;
 
+	
+	function Object(texture, height, width) {
+		this.height = height;
+		this.texture = texture;
+		this.width = width;
+	};
+
+	function Enemy(object, initialX, initialY, raycasterEngine) {
+		this.x = initialX;
+		this.y = initialY;
+		this.imageObject = object;
+		this.state = 0;
+		console.log(raycasterEngine);
+		this.raycasterEngine = raycasterEngine;
+		this.speed = 0;		
+		this.moveSpeed = .05;
+		raycasterEngine.enemyGrid.push(this);
+		raycasterEngine.numEnemies++;
+	}
+	
+	function updateEnemies(player, raycasterEngine, seconds) {
+		for(var i = 0; i < raycasterEngine.numEnemies; i++) {
+			var enemy = raycasterEngine.enemyGrid[i];
+			
+			var dx = player.x - enemy.x;
+			var dy = player.y - enemy.y;
+			var dist = Math.sqrt(dx*dx + dy*dy);
+			
+			if(dist > 4) {
+				if(dist < 8) {
+					moveEnemy(enemy, seconds, player, dy, dx, raycasterEngine);
+				}
+			}
+		}
+	}
+	
+	function moveEnemy(enemy, seconds, player, dy, dx, raycasterEngine) {
+		var moveDist = 2.5 * seconds;
+		var direction = Math.atan2(dy, dx);
+		var newX = entity.x + Math.cos(direction) * moveDist;
+		var newY = entity.y + Math.sin(direction) * moveDist;
+		if (raycasterEngine.map.getWall(newX, enemy.y).height <= 0) enemy.x = newX;
+        if (raycasterEngine.map.getWall(enemy.x, newY).height <= 0) enemy.y = newY;
+	}
+
+
       function Controls() {
         this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight'};
         this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false, 'fire': false};
@@ -267,23 +313,28 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 
 	  
 	  function RayCasterEngine() {
-		  
+		   	  
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
-		var display = document.getElementById('gameWorld');
+	    var display = document.getElementById('gameWorld');
 		var player = new Player(1.5, 1.5, Math.PI * 0.3);
 		var map = new Map(16);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
-
+		var enemyGrid = [];
+		var self = this;
+		
 		map.buildIntroLevel();
 		map.setWeather('RAIN');
-      
+		console.log(self);
+		Enemy(new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4), 1, 4, this);
+	  
 		loop.start(function frame(seconds) {
 			map.update(seconds);
 			player.update(controls.states, map, seconds);
+			updateEnemies(player, self, seconds);
 			camera.render(player, map);
 		}); 
 	  }
