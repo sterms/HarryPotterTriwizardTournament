@@ -9,11 +9,60 @@ function Object(texture, height, width) {
 	this.width = width;
 };
 
+function Projectile(x, y, pageX, texture, map) {
+	this.x = x;
+	this.y = y;
+	this.pageX = pageX;
+	this.angle = -1;
+	this.texture = texture;
+	this.map = map;
+	this.speed = .5;
+	this.line;
+	this.distance = 0;
+	this.scaleFactor = 1;
+}
+
+Projectile.prototype.setAngle = function(angle) {
+	if(this.angle == -1) {
+		this.angle = angle;
+		console.log("Angle: " + angle);
+		this.line = {m: Math.tan(angle), b: this.y - this.x * Math.tan(angle)};
+		console.log("Slope: " + this.line.m);
+	}
+}
+
+
+
+Projectile.prototype.update = function(point, map) {	
+	if(this.angle != -1) {
+		//console.log("inside projectile update");
+		this.distance = map.getDistance({x: this.x, y: this.y}, {x: point.x, y: point.y});
+		if(this.line.m >= 0) {
+			this.x += this.speed;
+		} else {
+			this.x -= this.speed;
+		}
+
+		this.y = this.line.m * this.x + this.line.b;
+		
+		if(map.getWall(Math.floor(this.x), Math.floor(this.y)).height > 0) {
+			console.log("Projectile hit wall! at " + Math.floor(this.x) + ", " + Math.floor(this.y));
+			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
+		}
+		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
+			console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
+			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
+		} 
+		this.scaleFactor *= .25;
+	}
+}
+
 
 function Map(size) {
         this.size = size;
         this.wallGrid = [];
 		this.objectGrid = [];
+		this.projectileGrid = [];
 		for(var i = 0; i < size * size; i++) {
 			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
 			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
@@ -27,7 +76,13 @@ function Map(size) {
 	  
 	Map.prototype.setWeather = function(weather) {
 		this.weather = weather;
-	};  
+	};
+
+	Map.prototype.updateProjectiles = function(point) {
+		for(var i = 0; i < this.projectileGrid.length; i++) {
+			this.projectileGrid[i].update(point, this);
+		}
+	}
 	  
 	Map.prototype.getDistance = function(p1, p2) {
 		return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) *(p1.y - p2.y)));

@@ -1,7 +1,12 @@
 	var CIRCLE = Math.PI * 2;
+	
+	//110 degrees of view. 0 is straight ahead, -55, +55;
+	//Mouse to angle can be found by doing mouseX / (width/2)
+	//Use Point-Angle to find 'Slope' of line. Projectile speed * slopeX = dx, projectile speed * slopeY = dy,
+	//Always draw after column, before weapon. check projectiles x/y floor coordinates for collisions.
 
       function Controls() {
-        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight'};
+        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight', 'x': -1};
         this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false, 'fire': false};
         document.addEventListener('keydown', this.onKey.bind(this, true), false);
         document.addEventListener('keyup', this.onKey.bind(this, false), false);
@@ -14,6 +19,9 @@
 
 	  Controls.prototype.onClick = function(e) {
 			this.states['fire'] = true;
+			this.codes['x'] = e.clientX;	
+			console.log("Inside Controls, onClick, client x: " + e.clientX + ", screen width: " + (window.innerWidth));
+			
       };
 	  
 	  Controls.prototype.onMouse = function(e) {
@@ -84,14 +92,27 @@
         if (map.getWall(this.x, this.y + dy).height <= 0) this.y += dy;
         this.paces += distance;
 	  }
+	  
+	  Player.prototype.fireWeapon = function(mouseX, map, controls) {
+		  //110 Deg FOV
+		  
 
-      Player.prototype.update = function(controls, map, seconds) {
+		  map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new ImageFile('assets/explosion.png', 600, 500), map));
+		  controls['fire'] = false;
+		  
+
+		  
+		  console.log("Inside Player.fireWeapon()");
+	  }
+
+      Player.prototype.update = function(controls, map, seconds, controlCodes) {
         if (controls.left) this.rotate(-Math.PI * .3 * seconds);
         if (controls.right) this.rotate(Math.PI * .3 * seconds);
         if (controls.forward) this.walk(2.5 * seconds, map);
         if (controls.backward) this.walk(-1.5 * seconds, map);
 		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
 		if (controls.strafeRight) this.strafe(1.5 * seconds, map);
+		if (controls.fire) this.fireWeapon(controlCodes['x'], map, controls);
       }; 
 
 
@@ -111,10 +132,27 @@
       Camera.prototype.render = function(player, map) {
         this.drawSky(player.direction, map.skybox, map.light);
         this.drawColumns(player, map);
+		this.drawProjectiles(player, map);
         this.drawWeapon(player.weapon, player.paces);
       };
 	  
-	  Camera.prototype.fireWeapon = function(player, map) {
+	  Camera.prototype.drawProjectiles = function(player, map) {
+		  //console.log("Trying to draw projectile.");
+		  //console.log("Array length: " + map.projectileGrid.length);
+		    
+			for(var i = 0; i < map.projectileGrid.length; i++) {
+				console.log("Player X: " + player.x + ", Y: " + player.y);
+				console.log("Projectile, X: " + map.projectileGrid[i].x + ", Y: " + map.projectileGrid[i].y);
+				//console.log(map.projectileGrid[i]);
+				if(map.projectileGrid[i].angle === -1) map.projectileGrid[i].setAngle(Math.atan2((map.projectileGrid[i].pageX/window.innerWidth) - .50, this.focalLength)); //console.log(((map.projectileGrid[i].pageX/window.innerWidth) - .50)); console.log("Angle set: " + map.projectileGrid[i].angle); //console.log(Math.atan2(map.projectileGrid[i].angle = (map.projectileGrid[i].pageX/window.innerWidth) * this.resolution, this.focalLength));
+				var projectile = this.project(.7, map.projectileGrid[i].angle, map.projectileGrid[i].distance);
+				var texture = map.projectileGrid[i].texture;
+				//console.log(this.width);
+				this.ctx.drawImage(map.projectileGrid[i].texture.image, 0, 0, map.projectileGrid[i].texture.width, map.projectileGrid[i].texture.height, map.projectileGrid[i].pageX/2, this.height/2, map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor, map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor);
+				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+				
+			}
+
 	  }
 
       Camera.prototype.drawSky = function(direction, sky, ambient) {
@@ -140,11 +178,15 @@
         for (var column = 0; column < this.resolution; column++) {
           var x = column / this.resolution - 0.5;
           var angle = Math.atan2(x, this.focalLength);
+		  //if(column == this.resolution / 4) console.log("ANGLE, 1/4: " + x);
+		  //if(column == this.resolution / 2) console.log("ANGLE 1/2: " + angle);
+		  //if(column == (this.resolution / 4)*3) console.log("ANGLE 3/4: " + angle);
+		  //if(column == 0) console.log("ANGLE 0: " + x);
+		  //if(column == this.resolution-1) console.log("ANGLE 100: " + x);
           var ray = map.cast(player, player.direction + angle, this.range);
           this.drawColumn(column, ray, angle, map);
-        }
-		
-			this.fireWeapon(player, map);
+        }		
+
 		
         this.ctx.restore();
       };
@@ -283,7 +325,8 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
       
 		loop.start(function frame(seconds) {
 			map.update(seconds);
-			player.update(controls.states, map, seconds);
+			map.updateProjectiles(player);
+			player.update(controls.states, map, seconds, controls.codes);
 			camera.render(player, map);
 		}); 
 	  }
