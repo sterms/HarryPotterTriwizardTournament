@@ -9,43 +9,56 @@ function Object(texture, height, width) {
 	this.width = width;
 };
 
-function Projectile(x, y, pageX, texture, map) {
+function Projectile(x, y, pageX, texture, frames, offset, map) {
 	this.x = x;
 	this.y = y;
 	this.pageX = pageX;
 	this.angle = -1;
 	this.texture = texture;
+	this.frames = frames;
+	this.currentFrame = 0;
+	this.offset = offset;
 	this.map = map;
 	this.speed = .5;
-	this.line;
-	this.distance = 0;
+	this.line; //Unused
+	this.distance = 0; // Unused
 	this.scaleFactor = 1;
 }
 
-Projectile.prototype.setAngle = function(angle) {
+Projectile.prototype.getFrameOffset = function() {
+	if(this.frames <= 1) return 0;
+	var frameOffset = this.currentFrame * this.offset;
+	this.currentFrame = this.currentFrame + 1 % this.frames;
+	return frameOffset;
+}
+
+Projectile.prototype.setAngle = function(angle, player) {
 	if(this.angle == -1) {
-		this.angle = angle;
-		console.log("Angle: " + angle);
+		this.angle = angle + player.direction;
+		//console.log("Angle: " + angle);
 		this.line = {m: Math.tan(angle), b: this.y - this.x * Math.tan(angle)};
-		console.log("Slope: " + this.line.m);
+		//console.log("Slope: " + this.line.m);
 	}
 }
 
 
 
-Projectile.prototype.update = function(point, map) {	
+Projectile.prototype.update = function(player, map) {	
 	if(this.angle != -1) {
 		//console.log("inside projectile update");
-		this.distance = map.getDistance({x: this.x, y: this.y}, {x: point.x, y: point.y});
-		this.x += this.speed * Math.cos(this.angle);
-		this.y += this.speed * Math.sin(this.angle);
+		this.distance = map.getDistance({x: this.x, y: this.y}, {x: player.x, y: player.y});
+		var sin = Math.sin(this.angle);
+		var cos = Math.cos(this.angle);
+		//console.log("Player DIR: " + player.direction);
+		this.x += this.speed * cos;
+		this.y += this.speed * sin;		
 		
 		if(map.getWall(Math.floor(this.x), Math.floor(this.y)).height > 0) {
-			console.log("Projectile hit wall! at " + Math.floor(this.x) + ", " + Math.floor(this.y));
+			//console.log("Projectile hit wall! at " + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
 		}
 		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
-			console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
+			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
 		} 
 		this.scaleFactor *= .5;

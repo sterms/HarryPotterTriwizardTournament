@@ -1,12 +1,9 @@
 	var CIRCLE = Math.PI * 2;
 	
-	//110 degrees of view. 0 is straight ahead, -55, +55;
-	//Mouse to angle can be found by doing mouseX / (width/2)
-	//Use Point-Angle to find 'Slope' of line. Projectile speed * slopeX = dx, projectile speed * slopeY = dy,
-	//Always draw after column, before weapon. check projectiles x/y floor coordinates for collisions.
+
 
       function Controls() {
-        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight', 'x': -1};
+        this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight', 'x': -1, 'y': -1};
         this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false, 'fire': false};
         document.addEventListener('keydown', this.onKey.bind(this, true), false);
         document.addEventListener('keyup', this.onKey.bind(this, false), false);
@@ -15,12 +12,13 @@
         document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
 		document.addEventListener('click', this.onClick.bind(this), false);
 		document.addEventListener('mousemove', this.onMouse.bind(this), false);
+		document.getElementById('gamescreen').style.cursor = "none";
       }
 
 	  Controls.prototype.onClick = function(e) {
 			this.states['fire'] = true;
 			this.codes['x'] = e.clientX;	
-			console.log("Inside Controls, onClick, client x: " + e.clientX + ", screen width: " + (window.innerWidth));
+			//console.log("Inside Controls, onClick, client x: " + e.clientX + ", screen width: " + (window.innerWidth));
 			
       };
 	  
@@ -33,7 +31,8 @@
 			this.states['left'] = false;
 			this.states['right'] = false;
 		}
-		
+		this.codes['x'] = e.clientX;
+		this.codes['y'] = e.clientY;		
 	  }
 	  
       Controls.prototype.onTouch = function(e) {
@@ -57,6 +56,7 @@
         e.preventDefault && e.preventDefault();
         e.stopPropagation && e.stopPropagation();
       };
+
 
       function ImageFile(src, width, height) {
         this.image = new Image();
@@ -94,15 +94,8 @@
 	  }
 	  
 	  Player.prototype.fireWeapon = function(mouseX, map, controls) {
-		  //110 Deg FOV
-		  
-
 		  map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new ImageFile('assets/explosion.png', 600, 500), map));
 		  controls['fire'] = false;
-		  
-
-		  
-		  console.log("Inside Player.fireWeapon()");
 	  }
 
       Player.prototype.update = function(controls, map, seconds, controlCodes) {
@@ -129,33 +122,27 @@
 		this.doOnce = 0;
       }
 
-      Camera.prototype.render = function(player, map) {
+      Camera.prototype.render = function(player, map, controls) {
         this.drawSky(player.direction, map.skybox, map.light);
         this.drawColumns(player, map);
 		this.drawProjectiles(player, map);
         this.drawWeapon(player.weapon, player.paces);
+		this.drawCrosshair(controls);
       };
 	  
-	  Camera.prototype.drawProjectiles = function(player, map) {
-		  //console.log("Trying to draw projectile.");
-		  //console.log("Array length: " + map.projectileGrid.length);
-		    
+	  Camera.prototype.drawProjectiles = function(player, map) {	    
 			for(var i = 0; i < map.projectileGrid.length; i++) {
-				console.log("Player X: " + player.x + ", Y: " + player.y);
-				console.log("Projectile, X: " + map.projectileGrid[i].x + ", Y: " + map.projectileGrid[i].y);
-				//console.log(map.projectileGrid[i]);
-				if(map.projectileGrid[i].angle === -1) map.projectileGrid[i].setAngle(Math.atan2((map.projectileGrid[i].pageX/window.innerWidth) - .50, this.focalLength)); //console.log(((map.projectileGrid[i].pageX/window.innerWidth) - .50)); console.log("Angle set: " + map.projectileGrid[i].angle); //console.log(Math.atan2(map.projectileGrid[i].angle = (map.projectileGrid[i].pageX/window.innerWidth) * this.resolution, this.focalLength));
+				if(map.projectileGrid[i].angle === -1) map.projectileGrid[i].setAngle(Math.atan2((map.projectileGrid[i].pageX/window.innerWidth) - .50, this.focalLength), player); //console.log(((map.projectileGrid[i].pageX/window.innerWidth) - .50)); console.log("Angle set: " + map.projectileGrid[i].angle); //console.log(Math.atan2(map.projectileGrid[i].angle = (map.projectileGrid[i].pageX/window.innerWidth) * this.resolution, this.focalLength));
 				var projectile = this.project(.7, map.projectileGrid[i].angle, map.projectileGrid[i].distance);
 				var texture = map.projectileGrid[i].texture;
-				//console.log(this.width);
-				this.ctx.drawImage(map.projectileGrid[i].texture.image, 0, 0, map.projectileGrid[i].texture.width, map.projectileGrid[i].texture.height, map.projectileGrid[i].pageX/2, this.height/2, map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor, map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor);
+				this.ctx.drawImage(map.projectileGrid[i].texture.image, 0, 0, map.projectileGrid[i].texture.width, map.projectileGrid[i].texture.height, map.projectileGrid[i].pageX/2 - ((map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor)/2), (this.height/2) - ((map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor)/2), map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor, map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor);
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-				
 			}
 
 	  }
 
       Camera.prototype.drawSky = function(direction, sky, ambient) {
+		 
         var width = sky.width * (this.height / sky.height) * 2;
         var left = (direction / CIRCLE) * -width;
 
@@ -221,7 +208,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		  
           if (s === hitWall) {				//When it finds the one closest to the player, it generates the wall.
 			var texture = map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
-			if(this.doOnce == 0) console.log(ray); 
+			//if(this.doOnce == 0) console.log(ray); 
             //var textureX = Math.floor(texture.width * step.offset);
 			var textureX = Math.floor(map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * step.offset);
 			//Run a .get here on the step.x step.y to get wall, texture from wall.
@@ -277,6 +264,16 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
         }
 		this.doOnce = 1;
       };
+	  
+	  Camera.prototype.drawCrosshair = function(controls) {
+		  //this.ctx.arc(rayEngine.controls.codes['x'], rayEngine.controls.codes['y'],50,0,Math.PI*2,true);
+
+		this.ctx.beginPath();
+		this.ctx.strokeStyle = "white";
+			this.ctx.arc(controls.codes['x']/2, controls.codes['y']/2,20,0,Math.PI*2,true);
+		this.ctx.stroke();
+		  
+	  }
 
       Camera.prototype.project = function(height, angle, distance) {
         var z = distance * Math.cos(angle);
@@ -327,7 +324,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 			map.update(seconds);
 			map.updateProjectiles(player);
 			player.update(controls.states, map, seconds, controls.codes);
-			camera.render(player, map);
+			camera.render(player, map, controls);
 		}); 
 	  }
       
