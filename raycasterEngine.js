@@ -81,12 +81,18 @@
       function Player(x, y, direction) {
         this.x = x;
         this.y = y;
-        this.direction = direction;
-        this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
+        this.direction = direction;	
         this.paces = 0;
+		
 		this.health = 100;
 		this.ammo = 51;
+		
 		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+		
+		this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
+		this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
+		this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
+		this.weaponTicks = 0;
       }
 	  
 	  Player.prototype.updateHealth = function(number) {
@@ -131,6 +137,7 @@
 			 this.ammo--; 
 			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));	 
 		  }	  
+		  this.weapon = this.fireWeaponIMG;
 		  controls['fire'] = false;
 	  }
 
@@ -141,7 +148,17 @@
         if (controls.backward) this.walk(-1.5 * seconds, map);
 		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
 		if (controls.strafeRight) this.strafe(1.5 * seconds, map);
-		if (controls.fire) this.fireWeapon(controlCodes['x'], map, controls);
+		if (controls.fire) {
+			this.fireWeapon(controlCodes['x'], map, controls);
+			this.weapon = this.fireWeaponIMG;
+			this.weaponTicks = 4;
+		} else {
+			if(this.weaponTicks > 0) {
+				 this.weaponTicks--;
+			} else {
+				this.weapon = this.idleWeaponIMG;
+			}
+		}
       }; 
 
 
@@ -162,7 +179,7 @@
         this.drawSky(player.direction, map.skybox, map.light);
         this.drawColumns(player, map);
 		this.drawProjectiles(player, map);
-        this.drawWeapon(player.weapon, player.paces);
+        this.drawWeapon(player.weapon, player.paces, player);
 		this.drawCrosshair(controls);
 		this.drawHud(player);
       };
@@ -213,17 +230,17 @@
         this.ctx.restore();
       };
 
-      Camera.prototype.drawWeapon = function(weapon, paces) {
+      Camera.prototype.drawWeapon = function(weapon, paces, player) {
         var bobX = Math.cos(paces * 2) * this.scale * 6;
         var bobY = Math.sin(paces * 4) * this.scale * 6;
         var left = this.width * .7 + bobX;
         var top = this.height * .5 + bobY;
         this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
+		//if(weapon.tag == 1) player.weapon = player.idleWeaponIMG; console.log("Was the firing animation, changing.");
       };
 
 	Camera.prototype.drawColumn = function(column, ray, angle, map) {
         var ctx = this.ctx;
-        //var texture = map.wallTextures[0];
         var left = Math.floor(column * this.spacing);
         var width = Math.ceil(this.spacing);
         var hitWall = -1;
@@ -317,8 +334,8 @@
 		  var farLeft = left + player.healthIcon.offset/2 + 20;
 		  var top = (window.innerHeight - 20 - player.healthIcon.texture.image.height)/2;
 		  var farTop = (window.innerHeight - 20)/2 - (15);
-		  console.log("Left: " + left);
-		  console.log("Top: " + top);
+		  //console.log("Left: " + left);
+		  //console.log("Top: " + top);
 		  //ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 		  
 		  this.ctx.fillStyle = "#FFFFFF";

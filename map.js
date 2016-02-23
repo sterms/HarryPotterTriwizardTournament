@@ -190,7 +190,7 @@ function Map(size) {
 		  }
 			this.objectGrid[1 * this.size + 3].height = .9;
 			this.objectGrid[1 * this.size + 3].width = .4;
-			this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 0);
+			this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512); //Animation(image(width, height), frames, offset)
 			//console.log("Sprite Output:");
 			//console.log(this.objectGrid[1 * this.size + 3]);
 		 
