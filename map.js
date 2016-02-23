@@ -3,21 +3,27 @@ function Wall(texture, height) {
 	this.texture = texture;
 };
 
-function Object(texture, height, width) {
+function Object(animation, height, width, isDestructable, damageDealt) {
 	this.height = height;
-	this.texture = texture;
 	this.width = width;
+	this.animation = animation;
+	this.isDestructable = isDestructable;
+	this.health = 100;
+	this.damageDealt = damageDealt; //DPS, or Damage per update.
 };
 
-function Projectile(x, y, pageX, texture, frames, offset, map) {
+Object.prototype.updateHealth = function(number) {
+	if(this.isDestructable) {
+		this.health += number;
+	}
+}
+
+function Projectile(x, y, pageX, animation, map) {
 	this.x = x;
 	this.y = y;
 	this.pageX = pageX;
 	this.angle = -1;
-	this.texture = texture;
-	this.frames = frames;
-	this.currentFrame = 0;
-	this.offset = offset;
+	this.animation = animation;
 	this.map = map;
 	this.speed = .5;
 	this.line; //Unused
@@ -26,10 +32,7 @@ function Projectile(x, y, pageX, texture, frames, offset, map) {
 }
 
 Projectile.prototype.getFrameOffset = function() {
-	if(this.frames <= 1) return 0;
-	var frameOffset = this.currentFrame * this.offset;
-	this.currentFrame = this.currentFrame + 1 % this.frames;
-	return frameOffset;
+	return this.animation.getFrameOffset(true);
 }
 
 Projectile.prototype.setAngle = function(angle, player) {
@@ -60,6 +63,10 @@ Projectile.prototype.update = function(player, map) {
 		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
 			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
+			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-21); //Projectile Damage, if we do multiple spells call object.damage or whatever.
+			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
+				map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+			}
 		} 
 		this.scaleFactor *= .5;
 	}
@@ -73,7 +80,7 @@ function Map(size) {
 		this.projectileGrid = [];
 		for(var i = 0; i < size * size; i++) {
 			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
-			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
+			this.objectGrid.splice(i, 1, new Object(new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512), 0, .4, true, 1)); 
 			//Removed 'Blank Texture'. Only 1 enemy type now though.
 		}
         this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
@@ -183,9 +190,9 @@ function Map(size) {
 		  }
 			this.objectGrid[1 * this.size + 3].height = .9;
 			this.objectGrid[1 * this.size + 3].width = .4;
-			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 256);
-			console.log("Sprite Output:");
-			console.log(this.objectGrid[1 * this.size + 3]);
+			this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 0);
+			//console.log("Sprite Output:");
+			//console.log(this.objectGrid[1 * this.size + 3]);
 		 
 		/*
 		################		0-15

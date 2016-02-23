@@ -1,5 +1,18 @@
 	var CIRCLE = Math.PI * 2;
 	
+	function Animation(texture, frames, offset) {
+		this.texture = texture;
+		this.frames = frames;
+		this.offset = offset;
+		this.currentFrame = 0;
+	}
+	
+	Animation.prototype.getFrameOffset = function(advance) { //Just get the offset. Or get the offset and advance.
+		if(this.frames <= 1) return 0;
+		var offset = this.currentFrame * this.offset;
+		if(advance) this.currentFrame = this.currentFrame + 1 % this.frames;
+		return offset;
+	}	
 
 
       function Controls() {
@@ -71,7 +84,23 @@
         this.direction = direction;
         this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
         this.paces = 0;
+		this.health = 100;
+		this.ammo = 51;
+		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
       }
+	  
+	  Player.prototype.updateHealth = function(number) {
+		  console.log("Current Health: " + this.health);
+		  this.health += number;
+		  if(this.health <= 75 && this.health > 50 && this.healthIcon.currentFrame != 1) {
+			  this.healthIcon.getFrameOffset(true);
+		  } else if (this.health <= 50 && this.health > 25 && this.healthIcon.currentFrame != 2) {
+			  this.healthIcon.getFrameOffset(true);		  
+		  } else if (this.health <= 25 && this.health > 0 && this.healthIcon.currentFrame != 3) {
+			  this.healthIcon.getFrameOffset(true);			  
+		  }
+		  //check if dead here.
+	  };
 
       Player.prototype.rotate = function(angle) {
         this.direction = (this.direction + angle + CIRCLE) % (CIRCLE);
@@ -82,6 +111,7 @@
         var dy = Math.sin(this.direction) * distance;
         if (map.getWall(this.x + dx, this.y).height <= 0) this.x += dx;
         if (map.getWall(this.x, this.y + dy).height <= 0) this.y += dy;
+		if (map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) this.updateHealth(map.getObject(Math.floor(this.x), Math.floor(this.y)).damageDealt * -1);
         this.paces += distance;
       };
 	  
@@ -94,7 +124,13 @@
 	  }
 	  
 	  Player.prototype.fireWeapon = function(mouseX, map, controls) {
-		  map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new ImageFile('assets/explosion.png', 600, 500), map));
+		  //If we do different spells, each spell, we check which spell is selected.
+		  //Then there would be an array corresponding to each type of spell selected.
+		  //then do the ammo, push the projectile type based on that.
+		  if(this.ammo > 0) {
+			 this.ammo--; 
+			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));	 
+		  }	  
 		  controls['fire'] = false;
 	  }
 
@@ -128,14 +164,13 @@
 		this.drawProjectiles(player, map);
         this.drawWeapon(player.weapon, player.paces);
 		this.drawCrosshair(controls);
+		this.drawHud(player);
       };
 	  
 	  Camera.prototype.drawProjectiles = function(player, map) {	    
 			for(var i = 0; i < map.projectileGrid.length; i++) {
 				if(map.projectileGrid[i].angle === -1) map.projectileGrid[i].setAngle(Math.atan2((map.projectileGrid[i].pageX/window.innerWidth) - .50, this.focalLength), player); //console.log(((map.projectileGrid[i].pageX/window.innerWidth) - .50)); console.log("Angle set: " + map.projectileGrid[i].angle); //console.log(Math.atan2(map.projectileGrid[i].angle = (map.projectileGrid[i].pageX/window.innerWidth) * this.resolution, this.focalLength));
-				var projectile = this.project(.7, map.projectileGrid[i].angle, map.projectileGrid[i].distance);
-				var texture = map.projectileGrid[i].texture;
-				this.ctx.drawImage(map.projectileGrid[i].texture.image, 0, 0, map.projectileGrid[i].texture.width, map.projectileGrid[i].texture.height, map.projectileGrid[i].pageX/2 - ((map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor)/2), (this.height/2) - ((map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor)/2), map.projectileGrid[i].texture.width * map.projectileGrid[i].scaleFactor, map.projectileGrid[i].texture.height * map.projectileGrid[i].scaleFactor);
+				this.ctx.drawImage(map.projectileGrid[i].animation.texture.image, map.projectileGrid[i].getFrameOffset(), 0, map.projectileGrid[i].animation.offset, map.projectileGrid[i].animation.texture.height, map.projectileGrid[i].pageX/2 - ((map.projectileGrid[i].animation.offset * map.projectileGrid[i].scaleFactor)/2), (this.height/2) - ((map.projectileGrid[i].animation.texture.height * map.projectileGrid[i].scaleFactor)/2), map.projectileGrid[i].animation.offset * map.projectileGrid[i].scaleFactor, map.projectileGrid[i].animation.texture.height * map.projectileGrid[i].scaleFactor);
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 			}
 
@@ -186,7 +221,7 @@
         this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
       };
 
-Camera.prototype.drawColumn = function(column, ray, angle, map) {
+	Camera.prototype.drawColumn = function(column, ray, angle, map) {
         var ctx = this.ctx;
         //var texture = map.wallTextures[0];
         var left = Math.floor(column * this.spacing);
@@ -225,12 +260,14 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
           }
 		  
 		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
-			var texture = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
+			var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
 
-			if(texture != null) {
+			if(entity != null) {
+
+				
 				var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
-				var textureX = Math.floor(map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * (step.offset - offset));
-
+				var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
+		
 				var object = this.project(step.objectHeight, angle, step.distance);				
 	
 				ctx.globalAlpha = 1;
@@ -238,8 +275,8 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 
 
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-								
-					ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, object.top, width, object.height);
+				//console.log(textureX);		
+				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);
 
 				
 				ctx.fillStyle = '#000000';
@@ -271,9 +308,43 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		this.ctx.beginPath();
 		this.ctx.strokeStyle = "white";
 			this.ctx.arc(controls.codes['x']/2, controls.codes['y']/2,20,0,Math.PI*2,true);
-		this.ctx.stroke();
+		this.ctx.stroke();		  
+	  };
+	  
+	  Camera.prototype.drawHud = function(player) {
+		  var spaceBuffer = 4; //Used for the health bar.
+		  var left = 15/2;
+		  var farLeft = left + player.healthIcon.offset/2 + 20;
+		  var top = (window.innerHeight - 20 - player.healthIcon.texture.image.height)/2;
+		  var farTop = (window.innerHeight - 20)/2 - (15);
+		  console.log("Left: " + left);
+		  console.log("Top: " + top);
+		  //ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 		  
-	  }
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.fillRect(left, top, player.healthIcon.offset/2 + spaceBuffer, player.healthIcon.texture.image.height/2 + spaceBuffer);
+		  
+		  this.ctx.drawImage(player.healthIcon.texture.image, player.healthIcon.getFrameOffset(), 0, player.healthIcon.offset, player.healthIcon.texture.image.height, left + (spaceBuffer/2), top + (spaceBuffer/2), player.healthIcon.offset/2, player.healthIcon.texture.image.height/2);
+		
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.fillRect(farLeft, farTop, 100 + spaceBuffer, 15 + spaceBuffer);
+		  this.ctx.fillStyle = "#B40404";
+		  this.ctx.fillRect(farLeft + (spaceBuffer/2), farTop + (spaceBuffer/2), player.health/100 * 100, 15);
+		  
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Health: " + player.health + "%", farLeft, farTop - 10);
+		  
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Spells: " + player.ammo, farLeft, farTop - (30 + spaceBuffer));
+		  
+		  /* if we implement multiple spells.
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Current Spell: " + player.controls.spells, farLeft, farTop - (50 + spaceBuffer));
+		  */
+	  };
 
       Camera.prototype.project = function(height, angle, distance) {
         var z = distance * Math.cos(angle);
