@@ -298,18 +298,8 @@
 	
 				ctx.globalAlpha = 1;
 				
-<<<<<<< HEAD
-
-				
-				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-								
-					ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, object.top, width, object.height);
-
-=======
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
-				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);
->>>>>>> refs/remotes/origin/master
-				
+				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
 				ctx.fillStyle = '#000000';
 				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
 				ctx.globalAlpha = 0;
@@ -415,47 +405,25 @@
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
-<<<<<<< HEAD
-	    var display = document.getElementById('gameWorld');
-=======
 		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
->>>>>>> refs/remotes/origin/master
-		var player = new Player(1.5, 1.5, Math.PI * 0.3);
+		var player = new Player(1.5, 1.5, 0);
 		var map = new Map(currentLevel);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
-<<<<<<< HEAD
 		var numEnemies = 0;
-		
 		var that = this;
-		
-		map.buildIntroLevel();
-		map.setWeather('RAIN');
 		var enemy = new Enemy(new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4), 1, 4, this);
 		var enemy2 = new Enemy(new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4), 2, 5, this);
 		
 		var enemyGrid = [enemy, enemy2];
-		
-		console.log(enemy);
 		numEnemies++;
 		numEnemies++;
-		console.log(enemyGrid[1]);
 		loop.start(function frame(seconds) {
 			map.update(seconds);
-			player.update(controls.states, map, seconds);
-			that.updateEnemies(player, seconds, enemyGrid, numEnemies, map);
-			camera.render(player, map);
-=======
-
-		//map.buildIntroLevel();
-		//map.setWeather('RAIN');
-      
-		loop.start(function frame(seconds) {
-			map.update(seconds);
-			map.updateProjectiles(player);
 			player.update(controls.states, map, seconds, controls.codes);
+			that.updateEnemies(player, seconds, enemyGrid, numEnemies, map);
 			camera.render(player, map, controls);
 			if(map.mapWon && currentLevel < 4) {
 				currentLevel++;
@@ -465,7 +433,6 @@
 			} else if (currentLevel == 4 && map.mapWon) {
 				//Win Game
 			}
->>>>>>> refs/remotes/origin/master
 		}); 
 	  }
 	  
