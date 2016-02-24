@@ -66,6 +66,7 @@ Projectile.prototype.update = function(player, map) {
 			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-21); //Projectile Damage, if we do multiple spells call object.damage or whatever.
 			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
 				map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				player.kills++;
 			}
 		} 
 		this.scaleFactor *= .5;
@@ -73,21 +74,51 @@ Projectile.prototype.update = function(player, map) {
 }
 
 
-function Map(size) {
-        this.size = size;
+function Map(level) {	
+	
+        this.size;
         this.wallGrid = [];
 		this.objectGrid = [];
 		this.projectileGrid = [];
-		for(var i = 0; i < size * size; i++) {
-			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
+		this.victoryCell = {x: 0, y: 0};
+		this.mapWon = false;
+		this.defaultWallTexture;
+		this.skybox;
+        this.light;	
+		this.weather; 
+		
+		this.getLevelProperties(level);		
+		this.initializeLevel();		
+		this.buildLevel(level);
+
+		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
+      }
+	  
+	Map.prototype.initializeLevel = function() {
+		for(var i = 0; i < this.size * this.size; i++) {
+			this.wallGrid.splice(i, 1, new Wall(this.defaultWallTexture, 0));
 			this.objectGrid.splice(i, 1, new Object(new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512), 0, .4, true, 1)); 
 			//Removed 'Blank Texture'. Only 1 enemy type now though.
 		}
-        this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
-        this.light = 0;	
-		this.weather = 'RAIN'; 
-		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
-      }
+	};  
+	  
+	  
+	Map.prototype.getLevelProperties = function(level) {
+		if(level == 1)  {
+			//Include a default for no crashing...
+			this.size = 16;
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2048, 2048);
+			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
+			this.light = 0;	
+			this.weather = 'RAIN'; 
+		}
+	}  
+	
+	Map.prototype.buildLevel = function(level) {
+		if(level == 1) {
+			this.buildIntroLevel();
+		}
+	};
 	  
 	Map.prototype.setWeather = function(weather) {
 		this.weather = weather;

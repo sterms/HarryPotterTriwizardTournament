@@ -84,6 +84,9 @@
         this.direction = direction;	
         this.paces = 0;
 		
+		this.defaultHealth = 100;
+		this.defaultAmmo = 51;
+		this.kills = 0;
 		this.health = 100;
 		this.ammo = 51;
 		
@@ -119,6 +122,7 @@
         if (map.getWall(this.x, this.y + dy).height <= 0) this.y += dy;
 		if (map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) this.updateHealth(map.getObject(Math.floor(this.x), Math.floor(this.y)).damageDealt * -1);
         this.paces += distance;
+		if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y) map.mapWon = true;
       };
 	  
 	  Player.prototype.strafe = function(distance, map) {
@@ -259,28 +263,25 @@
 		  
 		  
           if (s === hitWall) {				//When it finds the one closest to the player, it generates the wall.
-			var texture = map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture;
-			//if(this.doOnce == 0) console.log(ray); 
-            //var textureX = Math.floor(texture.width * step.offset);
-			var textureX = Math.floor(map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y)).texture.width * step.offset);
-			//Run a .get here on the step.x step.y to get wall, texture from wall.
-            var wall = this.project(step.wallHeight, angle, step.distance);
-
-			
-            ctx.globalAlpha = 1;
-            ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
-            
-            ctx.fillStyle = '#000000';
-            ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
-            ctx.fillRect(left, wall.top, width, wall.height);	
-
+			var wallValue = map.getWall(Math.floor(ray[s].x), Math.floor(ray[s].y));
+			if(wallValue != -1) {
+				var texture = wallValue.texture;
+				var textureX = wallValue.texture.width * step.offset;
+				var wall = this.project(step.wallHeight, angle, step.distance);
+				
+				ctx.globalAlpha = 1;
+				ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
+				
+				ctx.fillStyle = '#000000';
+				ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+				ctx.fillRect(left, wall.top, width, wall.height);	
+			}
           }
 		  
 		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
 			var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
 
 			if(entity != null) {
-
 				
 				var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
 				var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
@@ -289,12 +290,8 @@
 	
 				ctx.globalAlpha = 1;
 				
-
-
-				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
-				//console.log(textureX);		
+				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
 				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);
-
 				
 				ctx.fillStyle = '#000000';
 				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
@@ -316,7 +313,6 @@
 		  }
 
         }
-		this.doOnce = 1;
       };
 	  
 	  Camera.prototype.drawCrosshair = function(controls) {
@@ -355,6 +351,10 @@
 		  this.ctx.fillStyle = "#FFFFFF";
 		  this.ctx.font = "20px Monotype Corsiva";
 		  this.ctx.fillText("Spells: " + player.ammo, farLeft, farTop - (30 + spaceBuffer));
+		  
+		  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Kills: " + player.kills, farLeft, farTop - (50 + spaceBuffer));		  
 		  
 		  /* if we implement multiple spells.
 		  this.ctx.fillStyle = "#FFFFFF";
@@ -398,21 +398,30 @@
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
+		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
 		var player = new Player(1.5, 1.5, Math.PI * 0.3);
-		var map = new Map(16);
+		var map = new Map(currentLevel);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
 
-		map.buildIntroLevel();
-		map.setWeather('RAIN');
+		//map.buildIntroLevel();
+		//map.setWeather('RAIN');
       
 		loop.start(function frame(seconds) {
 			map.update(seconds);
 			map.updateProjectiles(player);
 			player.update(controls.states, map, seconds, controls.codes);
 			camera.render(player, map, controls);
+			if(map.mapWon && currentLevel < 4) {
+				currentLevel++;
+				map = new Map(currentLevel);
+				player.health = player.defaultHealth;
+				player.ammo = player.defaultAmmo;
+			} else if (currentLevel == 4 && map.mapWon) {
+				//Win Game
+			}
 		}); 
 	  }
       
