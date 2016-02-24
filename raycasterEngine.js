@@ -215,7 +215,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 				ctx.globalAlpha = 1;
 				
 
-
+				
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 								
 					ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, object.top, width, object.height);
@@ -313,9 +313,14 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 		this.x = initialX || 0;
 		this.y = initialY || 0;
 		this.imageObject = object || 0;
-		this.state = 0;
+		this.hp = 10;
+		//tracks the enemies state.  
+		this.state = 1;
 		this.speed = 0;		
 		this.moveSpeed = .05;
+		
+		//tracks if this enemy has been drawn this render
+		this.drawn = false;
 	}
 	
 	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, numEnemies, map) {
