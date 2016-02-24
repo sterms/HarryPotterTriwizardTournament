@@ -419,12 +419,8 @@
 	  RayCasterEngine.prototype.run = function() {
 		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
-<<<<<<< HEAD
-		var player = new Player(1.5, 1.5, 0);
-=======
->>>>>>> refs/remotes/origin/master
 		var map = new Map(currentLevel);
-		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, Math.PI * 0.3);
+		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
