@@ -3,31 +3,132 @@ function Wall(texture, height) {
 	this.texture = texture;
 };
 
-function Object(texture, height, width) {
+function Object(animation, height, width, isDestructable, damageDealt) {
 	this.height = height;
-	this.texture = texture;
 	this.width = width;
+	this.animation = animation;
+	this.isDestructable = isDestructable;
+	this.health = 100;
+	this.damageDealt = damageDealt; //DPS, or Damage per update.
 };
 
+Object.prototype.updateHealth = function(number) {
+	if(this.isDestructable) {
+		this.health += number;
+	}
+}
 
-function Map(size) {
-        this.size = size;
+function Projectile(x, y, pageX, animation, map) {
+	this.x = x;
+	this.y = y;
+	this.pageX = pageX;
+	this.angle = -1;
+	this.animation = animation;
+	this.map = map;
+	this.speed = .5;
+	this.line; //Unused
+	this.distance = 0; // Unused
+	this.scaleFactor = 1;
+}
+
+Projectile.prototype.getFrameOffset = function() {
+	return this.animation.getFrameOffset(true);
+}
+
+Projectile.prototype.setAngle = function(angle, player) {
+	if(this.angle == -1) {
+		this.angle = angle + player.direction;
+		//console.log("Angle: " + angle);
+		this.line = {m: Math.tan(angle), b: this.y - this.x * Math.tan(angle)};
+		//console.log("Slope: " + this.line.m);
+	}
+}
+
+
+
+Projectile.prototype.update = function(player, map) {	
+	if(this.angle != -1) {
+		//console.log("inside projectile update");
+		this.distance = map.getDistance({x: this.x, y: this.y}, {x: player.x, y: player.y});
+		var sin = Math.sin(this.angle);
+		var cos = Math.cos(this.angle);
+		//console.log("Player DIR: " + player.direction);
+		this.x += this.speed * cos;
+		this.y += this.speed * sin;		
+		
+		if(map.getWall(Math.floor(this.x), Math.floor(this.y)).height > 0) {
+			//console.log("Projectile hit wall! at " + Math.floor(this.x) + ", " + Math.floor(this.y));
+			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
+		}
+		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
+			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
+			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
+			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-21); //Projectile Damage, if we do multiple spells call object.damage or whatever.
+			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
+				map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				player.kills++;
+			}
+		} 
+		this.scaleFactor *= .5;
+	}
+}
+
+
+function Map(level) {	
+	
+        this.size;
         this.wallGrid = [];
 		this.objectGrid = [];
-		for(var i = 0; i < size * size; i++) {
-			this.wallGrid.splice(i, 1, new Wall(new ImageFile('assets/hedge.jpg', 2048, 2048), 0));
-			this.objectGrid.splice(i, 1, new Object(new ImageFile('assets/dementor.png', 512, 256), 0, .4));
-			//Removed 'Blank Texture'. Only 1 enemy type now though.
-		}
-        this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
-        this.light = 0;	
-		this.weather = 'RAIN'; 
+		this.projectileGrid = [];
+		this.victoryCell = {x: 0, y: 0};
+		this.mapWon = false;
+		this.defaultWallTexture;
+		this.skybox;
+        this.light;	
+		this.weather; 
+		
+		this.getLevelProperties(level);		
+		this.initializeLevel();		
+		this.buildLevel(level);
+
 		//this.wallTextures.push(new ImageFile('assets/bricks.jpg', 2048, 2048));
       }
 	  
+	Map.prototype.initializeLevel = function() {
+		for(var i = 0; i < this.size * this.size; i++) {
+			this.wallGrid.splice(i, 1, new Wall(this.defaultWallTexture, 0));
+			this.objectGrid.splice(i, 1, new Object(new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512), 0, .4, true, 1)); 
+			//Removed 'Blank Texture'. Only 1 enemy type now though.
+		}
+	};  
+	  
+	  
+	Map.prototype.getLevelProperties = function(level) {
+		if(level == 1)  {
+			//Include a default for no crashing...
+			this.size = 16;
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2048, 2048);
+			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
+			this.light = 0;	
+			this.weather = 'RAIN'; 
+		}
+	}  
+	
+	Map.prototype.buildLevel = function(level) {
+		if(level == 1) {
+			this.buildIntroLevel();
+		}
+	};
+	  
 	Map.prototype.setWeather = function(weather) {
 		this.weather = weather;
-	};  
+	};
+
+	Map.prototype.updateProjectiles = function(point) {
+		for(var i = 0; i < this.projectileGrid.length; i++) {
+			this.projectileGrid[i].update(point, this);
+		}
+	}
 	  
 	Map.prototype.getDistance = function(p1, p2) {
 		return Math.sqrt(((p1.x - p2.x) * (p1.x - p2.x)) + ((p1.y - p2.y) *(p1.y - p2.y)));
@@ -120,9 +221,9 @@ function Map(size) {
 		  }
 			this.objectGrid[1 * this.size + 3].height = .9;
 			this.objectGrid[1 * this.size + 3].width = .4;
-			this.objectGrid[1 * this.size + 3].texture = new ImageFile('assets/dementor.png', 512, 256);
-			console.log("Sprite Output:");
-			console.log(this.objectGrid[1 * this.size + 3]);
+			this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512); //Animation(image(width, height), frames, offset)
+			//console.log("Sprite Output:");
+			//console.log(this.objectGrid[1 * this.size + 3]);
 		 
 		/*
 		################		0-15
