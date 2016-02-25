@@ -111,7 +111,7 @@
       }
 	  
 	  Player.prototype.updateHealth = function(number) {
-		  console.log("Current Health: " + this.health);
+		  //console.log("Current Health: " + this.health);
 		  this.health += number;
 		  if (this.health < 0) {
 			  this.health = 0;
@@ -420,31 +420,32 @@
 		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 		var player = new Player(1.5, 1.5, 0);
 >>>>>>> refs/remotes/origin/sam
+=======
+>>>>>>> refs/remotes/origin/sam
 		var map = new Map(currentLevel);
-		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, Math.PI * 0.3);
+		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
-		var numEnemies = 0;
 		var that = this;
-		var enemy = new Enemy(8, 1, map);
-		var enemy2 = new Enemy(4, 7, map);
-		
-		var enemyGrid = [enemy, enemy2];
-		numEnemies++;
-		numEnemies++;
+		var enemyGrid = [];
+		enemyGrid = this.populateEnemies(enemyGrid, map);
+		//console.log(enemyGrid);
 		loop.start(function frame(seconds) {
 			map.update(seconds);
+			map.updateProjectiles(player);
 			player.update(controls.states, map, seconds, controls.codes);
-			that.updateEnemies(player, seconds, enemyGrid, numEnemies, map);
+			that.enemyGrid = that.updateEnemies(player, seconds, enemyGrid, map);
 			camera.render(player, map, controls);
 			if(map.mapWon && currentLevel < 4) {
 				currentLevel++;
 				map = new Map(currentLevel);
-				player = new Player(map.playerSpawn.x, map.playerSpawn.y, Math.PI * 0.3);
+				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+				this.populateEnemies(enemyGrid, map);
 			} else if (currentLevel == 4 && map.mapWon) {
 				//Win Game
 			}
@@ -464,21 +465,30 @@
 		
 	}
 	
-	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, numEnemies, map) {
+	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, map) {
 
-		for(var i = 0; i < numEnemies; i++) {
+		for(var i = 0; i < enemyGrid.length; i++) {
 			var enemy = enemyGrid[i];
 			var dx = player.x - enemy.x;
 			var dy = player.y - enemy.y;
 			var dist = Math.sqrt(dx*dx + dy*dy);
-			if (dist < 2) {
+			
+			//console.log("updating enemy: " + i + " distance: " + dist);
+			if (dist <= 2) {
 				player.beingDamaged = 1;
+				//console.log("enemy in range" + i);
 				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
 			}
-			if(dist > 2 && dist < 10) {
+			if(dist > 2 && dist < 7) {
 				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
 			}
+			if(map.getObject(enemy.x, enemy.y).health <= 0) {
+				enemyGrid.splice(i , 1);
+				//console.log("enemy dead: " + i + " " + enemy.x + " " + enemy.y);
+				//console.log(enemyGrid);
+			}
 		}
+		return enemyGrid;
 	};
 	
 	RayCasterEngine.prototype.moveEnemy = function(enemy, seconds, player, dy, dx, map) {
@@ -497,5 +507,19 @@
 		}
 		
 		
+	};
+	
+	RayCasterEngine.prototype.populateEnemies = function(enemyGrid, map) {
+		enemyGrid = [];
+		//console.log(enemyGrid);
+		for(var x = 0; x < map.size; x++) {
+			for(var y = 0; y < map.size; y++) {
+				if(map.getObject(x, y).height > 0) {
+					enemyGrid.splice(0, 0, new Enemy(x, y, map));
+					//console.log("Enemy added: " + x + ", " + y);
+				}
+			}
+		}
+		return enemyGrid;
 	};
       
