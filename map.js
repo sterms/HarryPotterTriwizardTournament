@@ -408,7 +408,11 @@ function Map(level) {
         if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
         return this.objectGrid[y * this.size + x];
       };
-	  
+	  Map.prototype.setObject = function(x, y, object) {
+		  x = Math.floor(x);
+		  y = Math.floor(y);
+		  this.objectGrid[y * this.size + x] = object;
+	  }
 	  
 	  Map.prototype.buildIntroLevel = function() {
 		  var totalSize = this.size * this.size;
@@ -465,9 +469,9 @@ function Map(level) {
 				  this.wallGrid[i].height = 1;
 			  }
 		  }
-			this.objectGrid[1 * this.size + 3].height = .9;
-			this.objectGrid[1 * this.size + 3].width = .4;
-			this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512); //Animation(image(width, height), frames, offset)
+			//this.objectGrid[1 * this.size + 3].height = .9;
+			//this.objectGrid[1 * this.size + 3].width = .4;
+			//this.objectGrid[1 * this.size + 3].animation = new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512); //Animation(image(width, height), frames, offset)
 			//console.log("Sprite Output:");
 			//console.log(this.objectGrid[1 * this.size + 3]);
 		 

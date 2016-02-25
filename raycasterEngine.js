@@ -15,6 +15,17 @@
 	}	
 
 
+	
+	function Object(animation, height, width, isDestructable, damageDealt) {
+		this.height = height;
+		this.width = width;
+		this.animation = animation;
+		this.isDestructable = isDestructable;
+		this.health = 100;
+		this.damageDealt = damageDealt; //DPS, or Damage per update.
+};
+
+
       function Controls() {
         this.codes  = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward', 65: 'left', 87: 'forward', 68: 'right', 83: 'backward', 81: 'strafeLeft', 69: 'strafeRight', 'x': -1, 'y': -1};
         this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false, 'strafeLeft': false, 'strafeRight': false, 'fire': false};
@@ -89,6 +100,7 @@
 		this.kills = 0;
 		this.health = 100;
 		this.ammo = 51;
+		this.beingDamaged = 0;
 		
 		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
 		
@@ -101,6 +113,9 @@
 	  Player.prototype.updateHealth = function(number) {
 		  console.log("Current Health: " + this.health);
 		  this.health += number;
+		  if (this.health < 0) {
+			  this.health = 0;
+		  }
 		  if(this.health <= 75 && this.health > 50 && this.healthIcon.currentFrame != 1) {
 			  this.healthIcon.getFrameOffset(true);
 		  } else if (this.health <= 50 && this.health > 25 && this.healthIcon.currentFrame != 2) {
@@ -120,7 +135,6 @@
         var dy = Math.sin(this.direction) * distance;
         if (map.getWall(this.x + dx, this.y).height <= 0) this.x += dx;
         if (map.getWall(this.x, this.y + dy).height <= 0) this.y += dy;
-		if (map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) this.updateHealth(map.getObject(Math.floor(this.x), Math.floor(this.y)).damageDealt * -1);
         this.paces += distance;
 		if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y) map.mapWon = true;
       };
@@ -146,12 +160,18 @@
 	  }
 
       Player.prototype.update = function(controls, map, seconds, controlCodes) {
+		if(this.beingDamaged == 1) {
+			map.setWeather("TOXIC");	
+			this.beingDamaged = 0;
+		} else {
+			map.setWeather("RAIN");
+		}
         if (controls.left) this.rotate(-Math.PI * .3 * seconds);
         if (controls.right) this.rotate(Math.PI * .3 * seconds);
         if (controls.forward) this.walk(2.5 * seconds, map);
         if (controls.backward) this.walk(-1.5 * seconds, map);
 		if (controls.strafeLeft) this.strafe(-1.5 * seconds, map);
-		if (controls.strafeRight) this.strafe(1.5 * seconds, map);
+		if (controls.strafeRight) this.strafe(1.5 * seconds, map);				
 		if (controls.fire) {
 			this.fireWeapon(controlCodes['x'], map, controls);
 			this.weapon = this.fireWeaponIMG;
@@ -291,8 +311,7 @@
 				ctx.globalAlpha = 1;
 				
 				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
-				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);
-				
+				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
 				ctx.fillStyle = '#000000';
 				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
 				ctx.globalAlpha = 0;
@@ -346,7 +365,7 @@
 		  
 		  this.ctx.fillStyle = "#FFFFFF";
 		  this.ctx.font = "20px Monotype Corsiva";
-		  this.ctx.fillText("Health: " + player.health + "%", farLeft, farTop - 10);
+		  this.ctx.fillText("Health: " + Math.round(player.health) + "%", farLeft, farTop - 10);
 		  
 		  this.ctx.fillStyle = "#FFFFFF";
 		  this.ctx.font = "20px Monotype Corsiva";
@@ -394,25 +413,33 @@
 
 	  
 	  function RayCasterEngine() {
-		  
+		   	  
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
 		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
+<<<<<<< HEAD
+=======
+		var player = new Player(1.5, 1.5, 0);
+>>>>>>> refs/remotes/origin/sam
 		var map = new Map(currentLevel);
 		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, Math.PI * 0.3);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
-
-		//map.buildIntroLevel();
-		//map.setWeather('RAIN');
-      
+		var numEnemies = 0;
+		var that = this;
+		var enemy = new Enemy(8, 1, map);
+		var enemy2 = new Enemy(4, 7, map);
+		
+		var enemyGrid = [enemy, enemy2];
+		numEnemies++;
+		numEnemies++;
 		loop.start(function frame(seconds) {
 			map.update(seconds);
-			map.updateProjectiles(player);
 			player.update(controls.states, map, seconds, controls.codes);
+			that.updateEnemies(player, seconds, enemyGrid, numEnemies, map);
 			camera.render(player, map, controls);
 			if(map.mapWon && currentLevel < 4) {
 				currentLevel++;
@@ -423,4 +450,52 @@
 			}
 		}); 
 	  }
+	  
+	  
+	function Enemy(initialX, initialY, map) {
+		this.x = initialX;
+		this.y = initialY;
+		//tracks the enemies state.  
+		this.state = 1;
+		this.speed = 0;		
+		this.moveSpeed = .7;
+		this.mapObject = map.getObject(initialX, initialY);
+		this.mapObject.height = .9;
+		
+	}
+	
+	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, numEnemies, map) {
+
+		for(var i = 0; i < numEnemies; i++) {
+			var enemy = enemyGrid[i];
+			var dx = player.x - enemy.x;
+			var dy = player.y - enemy.y;
+			var dist = Math.sqrt(dx*dx + dy*dy);
+			if (dist < 2) {
+				player.beingDamaged = 1;
+				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
+			}
+			if(dist > 2 && dist < 10) {
+				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
+			}
+		}
+	};
+	
+	RayCasterEngine.prototype.moveEnemy = function(enemy, seconds, player, dy, dx, map) {
+		var oldX = enemy.x;
+		var oldY = enemy.y;
+		var moveDist = enemy.moveSpeed * seconds;
+		var direction = Math.atan2(dy, dx);
+		var newX = enemy.x + Math.cos(direction) * moveDist;
+		var newY = enemy.y + Math.sin(direction) * moveDist;
+		if (map.getWall(newX, newY).height <= 0) enemy.x = newX;
+        if (map.getWall(newX, newY).height <= 0) enemy.y = newY;
+		if(oldX != enemy.x || oldY != enemy.y) {
+			var tempObject = map.getObject(oldX, oldY);
+			map.setObject(oldX, oldY, map.getObject(newX, newY));
+			map.setObject(newX, newY, tempObject);
+		}
+		
+		
+	};
       
