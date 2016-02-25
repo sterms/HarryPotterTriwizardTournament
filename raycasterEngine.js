@@ -286,7 +286,7 @@
 		
         for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
           var step = ray[s];
-		  if(map.weather == 'RAIN') var weatherDebris = Math.pow(Math.random(), 3) * s;
+		  if(map.weather == 'RAIN' || map.weather == 'ACID') var weatherDebris = Math.pow(Math.random(), 3) * s;
 		  else if(map.weather == 'SNOW') var weatherDebris = 2;
 		  else if(map.weather == 'TOXIC') var weatherDebris = 3;
           var weather = (weatherDebris > 0) && this.project(0.1, angle, step.distance);	  
@@ -356,7 +356,10 @@
 				  //Toxic Green: ctx.fillStyle = '#4DFE15';
 				  ctx.fillStyle = '#7baece';
 				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
-			  }			  
+			  }	else if (map.weather == 'ACID') {
+				  ctx.fillStyle = '#7e680b';
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
+			  }		  
 
         } //end main for loop
       };
@@ -457,7 +460,7 @@
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
-		var currentLevel = 4;  
+		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
 		var map = new Map(currentLevel);
 		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
@@ -479,13 +482,13 @@
                             loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
                             map = new Map(currentLevel); //Restart level
                             player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-                            that.populateEnemies(that.enemyGrid, map);
+                            enemyGrid = that.populateEnemies(that.enemyGrid, map);
                         }
 			if(map.mapWon && currentLevel < 4) {
 				currentLevel++;
 				map = new Map(currentLevel);
 				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-				that.populateEnemies(that.enemyGrid, map);
+				enemyGrid = that.populateEnemies(that.enemyGrid, map);
 			} else if (currentLevel == 4 && map.mapWon) {
 				//Win Game
 			}
