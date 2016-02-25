@@ -404,8 +404,8 @@
           height: wallHeight
         }; 
       };
-
-
+      
+ 
       function GameLoop() {
         this.frame = this.frame.bind(this);
         this.lastTime = 0;
@@ -422,6 +422,19 @@
         this.lastTime = time;
         if (seconds < 0.2) this.callback(seconds);
         requestAnimationFrame(this.frame);
+      };
+      
+      //parameter is an element id for an existing element on the document
+      GameLoop.prototype.showScreen = function(element) {
+          //hide game screen
+          document.getElementById("gamescreen").style.display = "none";
+          //show other screen
+          element.style.display = "block";
+          //Go back to game screen when clicked
+          document.onclick = function() {
+              element.style.display = "none";
+              document.getElementById("gamescreen").style.display = "block";
+          };
       };
 
 	  
@@ -447,6 +460,12 @@
 			player.update(controls.states, map, seconds, controls.codes);
 			that.enemyGrid = that.updateEnemies(player, seconds, enemyGrid, map);
 			camera.render(player, map, controls);
+                        if(player.health == 0){
+                            loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
+                            map = new Map(currentLevel); //Restart level
+                            player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+                            that.populateEnemies(that.enemyGrid, map);
+                        }
 			if(map.mapWon && currentLevel < 4) {
 				currentLevel++;
 				map = new Map(currentLevel);
