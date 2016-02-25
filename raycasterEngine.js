@@ -470,7 +470,7 @@
 			if (dist <= 2) {
 				player.beingDamaged = 1;
 				//console.log("enemy in range" + i);
-				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
+				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1);
 			}
 			if(dist > 2 && dist < 7) {
 				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
