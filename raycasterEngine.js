@@ -451,7 +451,7 @@
 				currentLevel++;
 				map = new Map(currentLevel);
 				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-				this.populateEnemies(that.enemyGrid, map);
+				that.populateEnemies(that.enemyGrid, map);
 			} else if (currentLevel == 4 && map.mapWon) {
 				//Win Game
 			}
