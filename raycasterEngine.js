@@ -10,7 +10,12 @@
 	Animation.prototype.getFrameOffset = function(advance) { //Just get the offset. Or get the offset and advance.
 		if(this.frames <= 1) return 0;
 		var offset = this.currentFrame * this.offset;
-		if(advance) this.currentFrame = this.currentFrame + 1 % this.frames;
+		if(advance) {
+			this.currentFrame++;
+			if(this.currentFrame >= this.frames) {
+				this.currentFrame = 0;
+			}	
+		}
 		return offset;
 	}	
 
@@ -193,7 +198,7 @@
         this.resolution = resolution;
         this.spacing = this.width / resolution;
         this.focalLength = focalLength || 0.8;
-        this.range = 14;
+        this.range = 16;
         this.lightRange = 5;
         this.scale = (this.width + this.height) / 1200; 
 		this.doOnce = 0;
@@ -308,21 +313,30 @@
 				
 				
 				var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
+				//var test = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y));
 				
 				//SAM INSERT ACTIVATE CODE HERE:
 				//map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).isActive = true or something...
 
 				if(entity != null) {
 					
-					var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
-					var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
-			
+					var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2; //So sprite doesnt render on immediate left, renders width/2 from left.
+					var textureX = entity.offset * (step.offset - offset);
+					var trueTextureX = textureX;
+					
 					var object = this.project(step.objectHeight, angle, step.distance);				
-		
+					//
+					
 					ctx.globalAlpha = 1;
 					
-					//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
-					ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
+					//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+					if(textureX >= 0) {
+						trueTextureX = textureX + entity.getFrameOffset();
+					} else {
+						trueTextureX = textureX;
+					}
+					//console.log("TextureX is: " + trueTextureX);
+					ctx.drawImage(entity.texture.image, trueTextureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
 					ctx.fillStyle = '#000000';
 					//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
 					ctx.globalAlpha = 0;
@@ -430,7 +444,7 @@
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
-		var currentLevel = 1;  
+		var currentLevel = 4;  
 		var display = document.getElementById('gameWorld');
 		var map = new Map(currentLevel);
 		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
@@ -444,6 +458,7 @@
 		loop.start(function frame(seconds) {
 			map.update(seconds);
 			map.updateProjectiles(player);
+			map.updateObjects(player);
 			player.update(controls.states, map, seconds, controls.codes);
 			that.enemyGrid = that.updateEnemies(player, seconds, enemyGrid, map);
 			camera.render(player, map, controls);
@@ -479,6 +494,7 @@
 			var dy = player.y - enemy.y;
 			var dist = Math.sqrt(dx*dx + dy*dy);
 			
+			map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).distanceFromPlayer = dist;
 			//console.log("updating enemy: " + i + " distance: " + dist);
 			if (dist <= 2) {
 				player.beingDamaged = 1;
