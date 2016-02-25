@@ -164,7 +164,7 @@
 			map.setWeather("TOXIC");	
 			this.beingDamaged = 0;
 		} else {
-			map.setWeather("RAIN");
+			map.setWeather(map.defaultWeather);
 		}
         if (controls.left) this.rotate(-Math.PI * .3 * seconds);
         if (controls.right) this.rotate(Math.PI * .3 * seconds);
@@ -268,10 +268,15 @@
         var left = Math.floor(column * this.spacing);
         var width = Math.ceil(this.spacing);
         var hitWall = -1;
-		var hitObject = -1;
+		var hitObjectIndex = -1;
+		var hitObject = []
 
         while (++hitWall < ray.length && ray[hitWall].wallHeight <= 0);	//This loop runs until it finds the first section of ray with a height not 0.
-		while (++hitObject < ray.length && ray[hitObject].objectHeight <= 0);
+		while (++hitObjectIndex < ray.length) {
+			if(ray[hitObjectIndex].objectHeight > 0) {
+				hitObject.push(hitObjectIndex);
+			}
+		}
 
 		
         for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
@@ -298,40 +303,48 @@
 			}
           }
 		  
-		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
-			var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
-
-			if(entity != null) {
+		  for(var i = hitObject.length-1; i >= 0; i--) {
+				if (s === hitObject[i] && hitObject[i] < hitWall) {								//When it finds the one closest to the player, it generates the wall.
 				
-				var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
-				var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
+				
+				var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
+				
+				//SAM INSERT ACTIVATE CODE HERE:
+				//map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).isActive = true or something...
+
+				if(entity != null) {
+					
+					var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
+					var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
+			
+					var object = this.project(step.objectHeight, angle, step.distance);				
 		
-				var object = this.project(step.objectHeight, angle, step.distance);				
-	
-				ctx.globalAlpha = 1;
-				
-				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
-				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
-				ctx.fillStyle = '#000000';
-				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
-				ctx.globalAlpha = 0;
-				ctx.fillRect(left, object.top, width, object.height);				
-			}
+					ctx.globalAlpha = 1;
+					
+					//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
+					ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
+					ctx.fillStyle = '#000000';
+					//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+					ctx.globalAlpha = 0;
+					ctx.fillRect(left, object.top, width, object.height);				
+				}
 
-          }
-          
-          ctx.fillStyle = '#ffffff';
-          ctx.globalAlpha = 0.15;
-		  if(map.weather == 'RAIN') {
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
-		  } else if (map.weather == 'SNOW') {
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 3, 3); 
-		  } else if (map.weather == 'TOXIC') {
-			  ctx.fillStyle = '#4DFE15';
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
-		  }
+			  }
+		  }	//end object for loop  
+		  
+			  ctx.fillStyle = '#ffffff';
+			  ctx.globalAlpha = 0.15;
+			  if(map.weather == 'RAIN') {
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
+			  } else if (map.weather == 'SNOW') {
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 3, 3); 
+			  } else if (map.weather == 'TOXIC') {
+				  //Toxic Green: ctx.fillStyle = '#4DFE15';
+				  ctx.fillStyle = '#7baece';
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
+			  }			  
 
-        }
+        } //end main for loop
       };
 	  
 	  Camera.prototype.drawCrosshair = function(controls) {
@@ -438,7 +451,7 @@
 				currentLevel++;
 				map = new Map(currentLevel);
 				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-				this.populateEnemies(enemyGrid, map);
+				this.populateEnemies(that.enemyGrid, map);
 			} else if (currentLevel == 4 && map.mapWon) {
 				//Win Game
 			}

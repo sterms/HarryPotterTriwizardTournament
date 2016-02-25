@@ -44,8 +44,6 @@ Projectile.prototype.setAngle = function(angle, player) {
 	}
 }
 
-
-
 Projectile.prototype.update = function(player, map) {	
 	if(this.angle != -1) {
 		//console.log("inside projectile update");
@@ -70,6 +68,7 @@ Projectile.prototype.update = function(player, map) {
 			}
 		} 
 		this.scaleFactor *= .5;
+		this.getFrameOffset(); //Advance frame.
 	}
 }
 
@@ -87,6 +86,7 @@ function Map(level) {
 		this.skybox;
         this.light;	
 		this.weather; 
+		this.defaultWeather;
 		
 		this.getLevelProperties(level);		
 		this.initializeLevel();		
@@ -113,13 +113,15 @@ function Map(level) {
 			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
 			this.light = 0;	
 			this.weather = 'RAIN'; 
+			this.defaultWeather = 'RAIN'; 
 		} else if (level == 2) {	
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 1};
 			this.defaultWallTexture = new ImageFile('assets/icewall.jpg', 512, 512);
 			this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
 			this.light = 0;	
-			this.weather = 'SNOW'; 			
+			this.weather = 'SNOW'; 
+			this.defaultWeather = 'SNOW'; 			
 		} else if (level == 3) { //Place holding, test level
 			this.size = 16;
 			this.victoryCell = {x: 4, y:20};
