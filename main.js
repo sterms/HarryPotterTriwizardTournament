@@ -55,16 +55,19 @@ AM.queueDownload("./assets/wandhand1.png");
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
     var ctx = canvas.getContext("2d");
+    var theme = new Audio("assets/hedwigstheme.m4a");
     
     //Function to make the splash screen disappear when it is clicked
     function clicked() {
         document.getElementById("splashscreen").style.display = "none"; //splash screen disappear
         document.getElementById("gamescreen").style.display = "block"; //game screen appear
+        theme.pause();
+        theme.currentTime = 0;
     }
         
     //Listen for click event to make splash screen go away
     document.getElementById("splashscreen").addEventListener("click", clicked, false);
-
+    theme.play();
 	var gameEngine = new GameEngine();
 	gameEngine.init(ctx);
 	gameEngine.start();
