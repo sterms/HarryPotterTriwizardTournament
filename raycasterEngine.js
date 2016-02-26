@@ -101,10 +101,10 @@
         this.paces = 0;
 
         this.defaultHealth = 100;
-        this.defaultAmmo = 51;
+        this.defaultAmmo = 52;
         this.kills = 0;
-        this.health = 100;
-        this.ammo = 51;
+        this.health = this.defaultHealth;
+        this.ammo = this.defaultAmmo;
         this.beingDamaged = 0;
         this.lives = 3;
         this.shot = new Audio("assets/projectile.wav"); 

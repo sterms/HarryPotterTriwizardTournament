@@ -46,6 +46,8 @@ Animation.prototype.isDone = function () {
 
 
 AM.queueDownload("./assets/IntroScreen.png");
+AM.queueDownload("./assets/hedwigstheme.m4a");
+AM.queueDownload("./assets/Tutorial.png");
 AM.queueDownload("./assets/dementor.png");
 AM.queueDownload("./assets/hedge.jpg");
 AM.queueDownload("./assets/northern.jpg");
@@ -55,24 +57,23 @@ AM.queueDownload("./assets/wandhand1.png");
 AM.downloadAll(function () {
     var canvas = document.getElementById("gameWorld");
     var ctx = canvas.getContext("2d");
-    var theme = new Audio("assets/hedwigstheme.m4a");
     
-    //Function to make the splash screen disappear when it is clicked
-    function clicked() {
-        document.getElementById("splashscreen").style.display = "none"; //splash screen disappear
-        document.getElementById("gamescreen").style.display = "block"; //game screen appear
-        theme.pause();
-        theme.currentTime = 0;
-    }
-        
-    //Listen for click event to make splash screen go away
-    document.getElementById("splashscreen").addEventListener("click", clicked, false);
+    var theme = new Audio("assets/hedwigstheme.m4a");
     theme.play();
-	var gameEngine = new GameEngine();
-	gameEngine.init(ctx);
-	gameEngine.start();
+    
+    document.getElementById("splashscreen").onclick = function() {
+        document.getElementById("splashscreen").style.display = "none";
+        document.getElementById("tutorial").style.display = "block";    
+    };
+    document.getElementById("tutorial").onclick = function() {
+        document.getElementById("tutorial").style.display = "none";
+        document.getElementById("gamescreen").style.display = "block";
+        theme.pause();
+    };
+
+    var gameEngine = new GameEngine();
+    gameEngine.init(ctx);
+    gameEngine.start();
     var raycaster = new RayCasterEngine();
     raycaster.run();
-    
-    console.log("All Done!");
 });
