@@ -99,21 +99,22 @@
         this.y = y;
         this.direction = direction;	
         this.paces = 0;
-		
-		this.defaultHealth = 100;
-		this.defaultAmmo = 51;
-		this.kills = 0;
-		this.health = 100;
-		this.ammo = 51;
-		this.beingDamaged = 0;
-		this.shot = new Audio("assets/projectile.wav"); 
-		
-		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
-		
-		this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
-		this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
-		this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
-		this.weaponTicks = 0;
+
+        this.defaultHealth = 100;
+        this.defaultAmmo = 51;
+        this.kills = 0;
+        this.health = 100;
+        this.ammo = 51;
+        this.beingDamaged = 0;
+        this.lives = 3;
+        this.shot = new Audio("assets/projectile.wav"); 
+
+        this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+
+        this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
+        this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
+        this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
+        this.weaponTicks = 0;
       }
 	  
 	  Player.prototype.updateHealth = function(number) {
@@ -193,6 +194,19 @@
 			}
 		}
       }; 
+      
+      //Restores player to starting conditions for the beginning of a level
+      Player.prototype.restore = function(x, y) {
+          this.x = x;
+          this.y = y;
+          this.direction = 0;	
+          this.paces = 0;
+          this.health = this.defaultHealth;
+          this.kills = 0;
+          this.ammo = this.defaultAmmo;
+          this.beingDamaged = 0;
+          this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+      }
 
 
       function Camera(canvas, resolution, focalLength) {
@@ -407,7 +421,11 @@
 		  
 		  this.ctx.fillStyle = "#FFFFFF";
 		  this.ctx.font = "20px Monotype Corsiva";
-		  this.ctx.fillText("Kills: " + player.kills, farLeft, farTop - (50 + spaceBuffer));		  
+		  this.ctx.fillText("Kills: " + player.kills, farLeft, farTop - (50 + spaceBuffer));	
+                  
+                  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Lives: " + player.lives, farLeft, farTop - (70 + spaceBuffer));
 		  
 		  /* if we implement multiple spells.
 		  this.ctx.fillStyle = "#FFFFFF";
@@ -483,18 +501,28 @@
 			that.enemyGrid = that.updateEnemies(player, seconds, enemyGrid, map);
 			camera.render(player, map, controls);
                         if(player.health == 0){
-                            loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
-                            map = new Map(currentLevel); //Restart level
-                            player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-                            enemyGrid = that.populateEnemies(that.enemyGrid, map);
+                            if (player.lives > 1) {
+                                loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
+                                map = new Map(currentLevel); //Restart level
+                                player.restore(map.playerSpawn.x, map.playerSpawn.y);
+                                player.lives--;
+                                //player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+                                enemyGrid = that.populateEnemies(that.enemyGrid, map);
+                            }
+                            else
+                                loop.showScreen(document.getElementById("gameover"));   
                         }
 			if(map.mapWon && currentLevel < 4) {
-				currentLevel++;
-				map = new Map(currentLevel);
-				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-				enemyGrid = that.populateEnemies(that.enemyGrid, map);
-			} else if (currentLevel == 4 && map.mapWon) {
-				//Win Game
+                            loop.showScreen(document.getElementById("levelcomplete"));
+                            currentLevel++;
+                            map = new Map(currentLevel);
+                            player.restore(map.playerSpawn.x, map.playerSpawn.y);
+                            //player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+                            enemyGrid = that.populateEnemies(that.enemyGrid, map);
+			} 
+                        else if (currentLevel == 4 && map.mapWon) {
+                            //Win Game
+                            loop.showScreen(document.getElementById("win"));
 			}
 		}); 
 	  }
