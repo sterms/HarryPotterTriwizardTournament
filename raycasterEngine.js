@@ -106,6 +106,7 @@
 		this.health = 100;
 		this.ammo = 51;
 		this.beingDamaged = 0;
+		this.shot = new Audio("assets/projectile.wav"); 
 		
 		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
 		
@@ -156,12 +157,15 @@
 		  //If we do different spells, each spell, we check which spell is selected.
 		  //Then there would be an array corresponding to each type of spell selected.
 		  //then do the ammo, push the projectile type based on that.
+		  this.shot.pause();
+		  this.shot.currentTime = 0;
 		  if(this.ammo > 0) {
 			 this.ammo--; 
 			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));	 
 		  }	  
 		  this.weapon = this.fireWeaponIMG;
-		  controls['fire'] = false;
+		  controls['fire'] = false;		  
+		  this.shot.play();
 	  }
 
       Player.prototype.update = function(controls, map, seconds, controlCodes) {
@@ -506,6 +510,8 @@
 		this.mapObject = map.getObject(initialX, initialY);
 		this.mapObject.height = .9;
 		
+		this.movementSFX = new Audio('assets/move.wav');
+		this.attackSFX = new Audio('assets/attack.wav');
 	}
 	
 	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, map) {
@@ -522,6 +528,9 @@
 				player.beingDamaged = 1;
 				//console.log("enemy in range" + i);
 				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1);
+				if(enemy.attackSFX.currentTime == 0) {
+					enemy.attackSFX.play();
+				}
 			}
 			if(dist > 2 && dist < 7) {
 				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
@@ -548,6 +557,7 @@
 			var tempObject = map.getObject(oldX, oldY);
 			map.setObject(oldX, oldY, map.getObject(newX, newY));
 			map.setObject(newX, newY, tempObject);
+			//enemy.movementSFX.play(); Can't use while they are moving without seeing, its annoying.
 		}
 		
 		
