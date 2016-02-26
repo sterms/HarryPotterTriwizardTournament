@@ -69,11 +69,13 @@ AM.downloadAll(function () {
         document.getElementById("tutorial").style.display = "none";
         document.getElementById("gamescreen").style.display = "block";
         theme.pause();
+		var raycaster = new RayCasterEngine();
+		raycaster.run();
     };
 
+	console.log("Reached.");
     var gameEngine = new GameEngine();
     gameEngine.init(ctx);
     gameEngine.start();
-    var raycaster = new RayCasterEngine();
-    raycaster.run();
+
 });

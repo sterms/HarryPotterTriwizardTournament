@@ -284,7 +284,9 @@ function Map(level) {
 			this.wallGrid[19 * this.size + 16].height = 1;
 
 			//Y20 - Victory Cell in wall
-			this.wallGrid[20 * this.size + 4].height = 0;
+			this.wallGrid[20 * this.size + 4].height = 0; 
+			this.objectGrid[20 * this.size + 4] = new Object(new Animation(new ImageFile('assets/trophy.png', 385, 600), 1, 385), 0, .3, false, 0);
+			this.objectGrid[20 * this.size + 4].height = .6;
 			
 			//Enemies:
 			this.objectGrid[1 * this.size + 8].height = 1; this.objectGrid[5 * this.size + 7].height = 1; this.objectGrid[5 * this.size + 9].height = 1; this.objectGrid[5 * this.size + 19].height = 1; 

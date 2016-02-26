@@ -101,15 +101,20 @@
         this.paces = 0;
 
         this.defaultHealth = 100;
-        this.defaultAmmo = 52;
+        this.defaultAmmo = 50;
         this.kills = 0;
         this.health = this.defaultHealth;
         this.ammo = this.defaultAmmo;
         this.beingDamaged = 0;
         this.lives = 3;
-        this.shot = new Audio("assets/projectile.wav"); 
+		
+        this.shot = []
+		for(var i = 0; i <= 15; i++) this.shot[i] = new Audio("assets/projectile.wav"); 
+		this.shotIndex = 0;
 
         this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+		
+		this.isPaused = true;
 
         this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
         this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
@@ -158,15 +163,19 @@
 		  //If we do different spells, each spell, we check which spell is selected.
 		  //Then there would be an array corresponding to each type of spell selected.
 		  //then do the ammo, push the projectile type based on that.
-		  this.shot.pause();
-		  this.shot.currentTime = 0;
-		  if(this.ammo > 0) {
+		  if(this.ammo > 0 && !this.isPaused) {
 			 this.ammo--; 
-			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));	 
-		  }	  
-		  this.weapon = this.fireWeaponIMG;
-		  controls['fire'] = false;		  
-		  this.shot.play();
+			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
+			  this.weapon = this.fireWeaponIMG;
+			  controls['fire'] = false;	
+			  //console.log(this.shotIndex);
+			  this.shot[this.shotIndex].play();
+			  this.shotIndex++;
+			  if(this.shotIndex >= this.shot.length) {
+				  this.shotIndex = 0;
+			  }	
+				
+		  }	 
 	  }
 
       Player.prototype.update = function(controls, map, seconds, controlCodes) {
@@ -478,7 +487,7 @@
 
 	  
 	  function RayCasterEngine() {
-		   	  
+		var isPaused = true;  
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
@@ -494,6 +503,8 @@
 		enemyGrid = this.populateEnemies(enemyGrid, map);
 		//console.log(enemyGrid);
 		loop.start(function frame(seconds) {
+			player.isPaused = false;
+			player.health = 10000;
 			map.update(seconds);
 			map.updateProjectiles(player);
 			map.updateObjects(player);
@@ -502,7 +513,9 @@
 			camera.render(player, map, controls);
                         if(player.health == 0){
                             if (player.lives > 1) {
+								player.isPaused = true;
                                 loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
+								player.isPaused = false;
                                 map = new Map(currentLevel); //Restart level
                                 player.restore(map.playerSpawn.x, map.playerSpawn.y);
                                 player.lives--;
@@ -510,10 +523,13 @@
                                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
                             }
                             else
+								player.isPaused = true;
                                 loop.showScreen(document.getElementById("gameover"));   
                         }
 			if(map.mapWon && currentLevel < 4) {
+							player.isPaused = true;
                             loop.showScreen(document.getElementById("levelcomplete"));
+							player.isPaused = false;
                             currentLevel++;
                             map = new Map(currentLevel);
                             player.restore(map.playerSpawn.x, map.playerSpawn.y);
@@ -522,6 +538,7 @@
 			} 
                         else if (currentLevel == 4 && map.mapWon) {
                             //Win Game
+							player.isPaused = true;
                             loop.showScreen(document.getElementById("win"));
 			}
 		}); 
