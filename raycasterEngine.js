@@ -130,7 +130,9 @@ function Player(x, y, direction) {
 
 Player.prototype.updateHealth = function (number) {
     this.health += number;
-
+	if(this.health > this.defaultHealth) {
+		this.health = this.defaultHealth;
+	}
     if (this.health < 0) {
         this.health = 0;
     }
@@ -174,7 +176,7 @@ Player.prototype.fireWeapon = function (mouseX, map, controls) {
     //If we do different spells, each spell, we check which spell is selected.
     //Then there would be an array corresponding to each type of spell selected.
     //then do the ammo, push the projectile type based on that.
-    if (this.ammo > 0 && !this.isPaused) {
+    if (this.ammo > .5 && !this.isPaused) {
         this.ammo--;
         map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
         this.weapon = this.fireWeaponIMG;
@@ -189,14 +191,22 @@ Player.prototype.fireWeapon = function (mouseX, map, controls) {
     }
 }
 
+Player.prototype.updateAmmo = function (amount) {
+	this.ammo += amount;
+	if(this.ammo > this.defaultAmmo) {
+		this.ammo = this.defaultAmmo;
+	}
+};
+
 Player.prototype.update = function (controls, map, seconds, controlCodes) {
+	this.updateAmmo(.01);
     if (this.beingDamaged == 1) {
         map.setWeather("TOXIC");
         this.beingDamaged = 0;
 	} 
     else {
         map.setWeather(map.defaultWeather);
-        this.updateHealth(.002);
+        this.updateHealth(.01);
     }
     if (controls.left)
         this.rotate(-Math.PI * .3 * seconds);
@@ -363,8 +373,7 @@ Camera.prototype.drawWeapon = function (weapon, paces, player) {
 				
 				//SAM INSERT ACTIVATE CODE HERE:
 				//map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).isActive = true or something...
-				//console.log("enemy activated");
-				map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y), 1);
+				
 				
 				if(entity != null) {
 					
@@ -382,6 +391,8 @@ Camera.prototype.drawWeapon = function (weapon, paces, player) {
 					} else {
 						trueTextureX = textureX;
 					}
+					//console.log("enemy activated");
+					map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y), 1);
 					//console.log("TextureX is: " + trueTextureX);
 					ctx.drawImage(entity.texture.image, trueTextureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
 					ctx.fillStyle = '#000000';
@@ -446,7 +457,7 @@ Camera.prototype.drawHud = function (player) {
 
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.font = "20px Monotype Corsiva";
-    this.ctx.fillText("Spells: " + player.ammo, farLeft, farTop - (30 + spaceBuffer));
+    this.ctx.fillText("Spells: " + Math.round(player.ammo), farLeft, farTop - (30 + spaceBuffer));
 
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.font = "20px Monotype Corsiva";
@@ -524,6 +535,7 @@ RayCasterEngine.prototype.run = function () {
     var that = this;
     var enemyGrid = [];
     enemyGrid = this.populateEnemies(enemyGrid, map);
+	console.log("Enemy grid populated with: " + enemyGrid.length);
     //console.log(enemyGrid);
     loop.start(function frame(seconds) {
         player.isPaused = false;
@@ -542,6 +554,7 @@ RayCasterEngine.prototype.run = function () {
                 player.restore(map.playerSpawn.x, map.playerSpawn.y);
                 player.lives--;
                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
+				console.log("Enemy grid populated with: " + enemyGrid.length);
             } 
             else {
                 player.isPaused = true;
@@ -557,6 +570,7 @@ RayCasterEngine.prototype.run = function () {
             map = new Map(currentLevel);
             player.restore(map.playerSpawn.x, map.playerSpawn.y);
             enemyGrid = that.populateEnemies(that.enemyGrid, map);
+			console.log("Enemy grid populated with: " + enemyGrid.length);
         } else if (currentLevel == 4 && map.mapWon) {
             //Win Game
             player.isPaused = true;
@@ -570,11 +584,11 @@ RayCasterEngine.prototype.run = function () {
 		//console.log("update enemies grid:" + enemyGrid);
 		for(var i = 0; i < enemyGrid.length; i++) {
 			var enemy = enemyGrid[i];
+			//console.log("Player: " + player.x + ", " + player.y + " Enemy: " + enemy.x + ", " + enemy.y);
 			if(map.getObject(enemy.x, enemy.y).active != 0) {
 				var dx = player.x - enemy.x;
 				var dy = player.y - enemy.y;
 				var dist = Math.sqrt(dx*dx + dy*dy);
-				
 				map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).distanceFromPlayer = dist;
 				//console.log("updating enemy: " + i + " distance: " + dist);
 				if (dist <= 4) {
@@ -595,7 +609,7 @@ RayCasterEngine.prototype.run = function () {
 					console.log("enemy dead: " + i + " " + enemy.x + " " + enemy.y);
 					//console.log(enemyGrid);
 				}
-				map.getObject(enemy.x, enemy.y).active = 0;
+				//map.getObject(enemy.x, enemy.y).active = 0;
 			}
 			//map.activate(enemy.x, enemy.y, 0);
 		}
@@ -626,9 +640,9 @@ RayCasterEngine.prototype.run = function () {
 		//console.log(enemyGrid);
 		for(var x = 0; x < map.size; x++) {
 			for(var y = 0; y < map.size; y++) {
-				if(map.getObject(x, y).height > 0) {
-					enemyGrid.splice(0, 0, new Enemy(x, y, map));
-					//console.log("Enemy added: " + x + ", " + y);
+				if(map.getObject(x, y).height == 1) {
+					enemyGrid.splice(0, 0, new Enemy(x + .5, y + .5, map));
+					console.log("Enemy added: " + (x + .5) + ", " + (y + .5));
 				}
 			}
 		}
