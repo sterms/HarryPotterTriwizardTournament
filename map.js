@@ -130,7 +130,7 @@ function Map(level) {
 			this.size = 21;
 			this.victoryCell = {x: 1, y: 20};
 			this.defaultWallTexture = new ImageFile('assets/wood.jpg', 1022, 1024);
-			this.skybox = new ImageFile('assets/summerScape.jpg', 2000, 750);
+			this.skybox = new ImageFile('assets/summerscape.jpg', 2000, 750);
 			this.light = 1;	
 			this.weather = 'NONE'; 
 			this.defaultWeather = 'NONE'; 
