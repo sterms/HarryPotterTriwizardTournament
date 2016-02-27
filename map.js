@@ -4,6 +4,7 @@ function Wall(texture, height) {
 };
 
 function Object(animation, height, width, isDestructable, damageDealt) {
+	this.active = 0;
 	this.height = height;
 	this.width = width;
 	this.animation = animation;
@@ -608,11 +609,18 @@ function Map(level) {
         if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
         return this.objectGrid[y * this.size + x];
       };
+	  
+	  Map.prototype.activate = function(x, y, value) {
+		  x = Math.floor(x);
+		  y = Math.floor(y);
+		  this.objectGrid[y * this.size + x].active = value;
+	  };
+	  
 	  Map.prototype.setObject = function(x, y, object) {
 		  x = Math.floor(x);
 		  y = Math.floor(y);
 		  this.objectGrid[y * this.size + x] = object;
-	  }
+	  };
 	  
 	  Map.prototype.buildIntroLevel = function() {
 		  var totalSize = this.size * this.size;

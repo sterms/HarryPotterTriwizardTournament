@@ -182,6 +182,7 @@
 		if(this.beingDamaged == 1) {
 			map.setWeather("TOXIC");	
 			this.beingDamaged = 0;
+			//console.log("player health " + this.health);
 		} else {
 			map.setWeather(map.defaultWeather);
 		}
@@ -206,6 +207,7 @@
       
       //Restores player to starting conditions for the beginning of a level
       Player.prototype.restore = function(x, y) {
+		  console.log("Restored");
           this.x = x;
           this.y = y;
           this.direction = 0;	
@@ -294,7 +296,7 @@
         this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
 		//if(weapon.tag == 1) player.weapon = player.idleWeaponIMG; console.log("Was the firing animation, changing.");
       };
-
+	
 	Camera.prototype.drawColumn = function(column, ray, angle, map) {
         var ctx = this.ctx;
         var left = Math.floor(column * this.spacing);
@@ -344,7 +346,9 @@
 				
 				//SAM INSERT ACTIVATE CODE HERE:
 				//map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).isActive = true or something...
-
+				//console.log("enemy activated");
+				map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y), 1);
+				
 				if(entity != null) {
 					
 					var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2; //So sprite doesnt render on immediate left, renders width/2 from left.
@@ -355,7 +359,6 @@
 					//
 					
 					ctx.globalAlpha = 1;
-					
 					//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 					if(textureX >= 0) {
 						trueTextureX = textureX + entity.getFrameOffset();
@@ -493,18 +496,17 @@
 	  RayCasterEngine.prototype.run = function() {
 		var currentLevel = 1;  
 		var display = document.getElementById('gameWorld');
-		var map = new Map(currentLevel);
+		var map = new Map(currentLevel);	
+		var enemyGrid = [];
 		var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
 		var controls = new Controls();
 		var camera = new Camera(display, 320, 0.8);
 		var loop = new GameLoop();
 		var that = this;
-		var enemyGrid = [];
 		enemyGrid = this.populateEnemies(enemyGrid, map);
 		//console.log(enemyGrid);
 		loop.start(function frame(seconds) {
 			player.isPaused = false;
-			player.health = 10000;
 			map.update(seconds);
 			map.updateProjectiles(player);
 			map.updateObjects(player);
@@ -522,9 +524,10 @@
                                 //player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
                                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
                             }
-                            else
+                            else {
 								player.isPaused = true;
                                 loop.showScreen(document.getElementById("gameover"));   
+							}
                         }
 			if(map.mapWon && currentLevel < 4) {
 							player.isPaused = true;
@@ -554,37 +557,42 @@
 		this.moveSpeed = .7;
 		this.mapObject = map.getObject(initialX, initialY);
 		this.mapObject.height = .9;
-		
 		this.movementSFX = new Audio('assets/move.wav');
 		this.attackSFX = new Audio('assets/attack.wav');
 	}
 	
 	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, map) {
-
+		//console.log("update enemies grid:" + enemyGrid);
 		for(var i = 0; i < enemyGrid.length; i++) {
 			var enemy = enemyGrid[i];
-			var dx = player.x - enemy.x;
-			var dy = player.y - enemy.y;
-			var dist = Math.sqrt(dx*dx + dy*dy);
-			
-			map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).distanceFromPlayer = dist;
-			//console.log("updating enemy: " + i + " distance: " + dist);
-			if (dist <= 2) {
-				player.beingDamaged = 1;
-				//console.log("enemy in range" + i);
-				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1);
-				if(enemy.attackSFX.currentTime == 0) {
-					enemy.attackSFX.play();
+			if(map.getObject(enemy.x, enemy.y).active != 0) {
+				var dx = player.x - enemy.x;
+				var dy = player.y - enemy.y;
+				var dist = Math.sqrt(dx*dx + dy*dy);
+				
+				map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).distanceFromPlayer = dist;
+				//console.log("updating enemy: " + i + " distance: " + dist);
+				if (dist <= 4) {
+						player.beingDamaged = 1;
+						//console.log("enemy in range" + i);
+						//console.log("Enemy damage: " + map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
+						player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
+						if(enemy.attackSFX.currentTime == 0) {
+							enemy.attackSFX.play();
+						}
 				}
+				if((dist > 2 && dist < 7) || dist < .5) {
+					//console.log("calling move");
+					RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
+				}
+				if(map.getObject(enemy.x, enemy.y).health <= 0) {
+					enemyGrid.splice(i , 1);
+					console.log("enemy dead: " + i + " " + enemy.x + " " + enemy.y);
+					//console.log(enemyGrid);
+				}
+				map.getObject(enemy.x, enemy.y).active = 0;
 			}
-			if(dist > 2 && dist < 7) {
-				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
-			}
-			if(map.getObject(enemy.x, enemy.y).health <= 0) {
-				enemyGrid.splice(i , 1);
-				//console.log("enemy dead: " + i + " " + enemy.x + " " + enemy.y);
-				//console.log(enemyGrid);
-			}
+			//map.activate(enemy.x, enemy.y, 0);
 		}
 		return enemyGrid;
 	};
@@ -596,16 +604,16 @@
 		var direction = Math.atan2(dy, dx);
 		var newX = enemy.x + Math.cos(direction) * moveDist;
 		var newY = enemy.y + Math.sin(direction) * moveDist;
-		if (map.getWall(newX, newY).height <= 0) enemy.x = newX;
-        if (map.getWall(newX, newY).height <= 0) enemy.y = newY;
-		if(oldX != enemy.x || oldY != enemy.y) {
+		if (map.getWall(newX, newY).height <= 0) {
+			enemy.x = newX;
+			enemy.y = newY;
+		}
+		if(Math.floor(oldX) != Math.floor(enemy.x) || Math.floor(oldY) != Math.floor(enemy.y)) {
 			var tempObject = map.getObject(oldX, oldY);
 			map.setObject(oldX, oldY, map.getObject(newX, newY));
 			map.setObject(newX, newY, tempObject);
 			//enemy.movementSFX.play(); Can't use while they are moving without seeing, its annoying.
-		}
-		
-		
+		}	
 	};
 	
 	RayCasterEngine.prototype.populateEnemies = function(enemyGrid, map) {
