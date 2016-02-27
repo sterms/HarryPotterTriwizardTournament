@@ -10,6 +10,7 @@ function Object(animation, height, width, isDestructable, damageDealt) {
 	this.isDestructable = isDestructable;
 	this.health = 100;
 	this.damageDealt = damageDealt; //DPS, or Damage per update.
+	this.distanceFromPlayer = -1;
 };
 
 Object.prototype.updateHealth = function(number) {
@@ -44,8 +45,6 @@ Projectile.prototype.setAngle = function(angle, player) {
 	}
 }
 
-
-
 Projectile.prototype.update = function(player, map) {	
 	if(this.angle != -1) {
 		//console.log("inside projectile update");
@@ -70,6 +69,7 @@ Projectile.prototype.update = function(player, map) {
 			}
 		} 
 		this.scaleFactor *= .5;
+		this.getFrameOffset(); //Advance frame.
 	}
 }
 
@@ -87,6 +87,7 @@ function Map(level) {
 		this.skybox;
         this.light;	
 		this.weather; 
+		this.defaultWeather;
 		
 		this.getLevelProperties(level);		
 		this.initializeLevel();		
@@ -98,7 +99,7 @@ function Map(level) {
 	Map.prototype.initializeLevel = function() {
 		for(var i = 0; i < this.size * this.size; i++) {
 			this.wallGrid.splice(i, 1, new Wall(this.defaultWallTexture, 0));
-			this.objectGrid.splice(i, 1, new Object(new Animation(new ImageFile('assets/dementor.png', 512, 256), 1, 512), 0, .4, true, 1)); 
+			this.objectGrid.splice(i, 1, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));  //Modified with to work with new animation strip.
 			//Removed 'Blank Texture'. Only 1 enemy type now though.
 		}
 	};  
@@ -109,18 +110,40 @@ function Map(level) {
 			//Include a default for no crashing...
 			this.size = 21;
 			this.victoryCell = {x: 4, y:20};
-			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2048, 2048);
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2046, 2048);
 			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
 			this.light = 0;	
 			this.weather = 'RAIN'; 
+			this.defaultWeather = 'RAIN'; 
+			this.playerSpawn = {x: 1.5, y: 1.5};
 		} else if (level == 2) {	
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 1};
-			this.defaultWallTexture = new ImageFile('assets/icewall.jpg', 512, 512);
+			this.defaultWallTexture = new ImageFile('assets/icewall.jpg', 510, 512);
 			this.skybox = new ImageFile('assets/northern.jpg', 2000, 750);
 			this.light = 0;	
-			this.weather = 'SNOW'; 			
-		} else if (level == 3) { //Place holding, test level
+			this.weather = 'SNOW'; 
+			this.defaultWeather = 'SNOW'; 	
+			this.playerSpawn = {x: 1.5, y: 1.5};
+		} else if (level == 3) {
+			this.size = 21;
+			this.victoryCell = {x: 1, y: 20};
+			this.defaultWallTexture = new ImageFile('assets/wood.jpg', 1022, 1024);
+			this.skybox = new ImageFile('assets/summerScape.jpg', 2000, 750);
+			this.light = 1;	
+			this.weather = 'NONE'; 
+			this.defaultWeather = 'NONE'; 
+			this.playerSpawn = {x: 11.5, y: 1.5};
+		} else if (level == 4) {			
+			this.size = 21;
+			this.victoryCell = {x: 20, y: 19};
+			this.defaultWallTexture = new ImageFile('assets/burntwood.jpg', 598, 407);
+			this.skybox = new ImageFile('assets/hellscape.jpg', 2000, 750);
+			this.light = 0;	
+			this.weather = 'ACID'; //Acid rain?
+			this.defaultWeather = 'ACID'; 
+			this.playerSpawn = {x: 5.5, y: 1.5};
+		} else { //Place holding, test level
 			this.size = 16;
 			this.victoryCell = {x: 4, y:20};
 			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2048, 2048);
@@ -151,7 +174,7 @@ function Map(level) {
 			//End of border build.
 		
 		
-		if(level == 1) {
+		if(level == 1) { //'Hedge Maze'
 			//this.buildIntroLevel();
 			//Formula: this.wallGrid[y * this.size + x]
 			
@@ -261,13 +284,15 @@ function Map(level) {
 			this.wallGrid[19 * this.size + 16].height = 1;
 
 			//Y20 - Victory Cell in wall
-			this.wallGrid[20 * this.size + 4].height = 0;
+			this.wallGrid[20 * this.size + 4].height = 0; 
+			this.objectGrid[20 * this.size + 4] = new Object(new Animation(new ImageFile('assets/trophy.png', 385, 600), 1, 385), 0, .3, false, 0);
+			this.objectGrid[20 * this.size + 4].height = .6;
 			
 			//Enemies:
 			this.objectGrid[1 * this.size + 8].height = 1; this.objectGrid[5 * this.size + 7].height = 1; this.objectGrid[5 * this.size + 9].height = 1; this.objectGrid[5 * this.size + 19].height = 1; 
 			this.objectGrid[9 * this.size + 13].height = 1; this.objectGrid[11 * this.size + 5].height = 1; this.objectGrid[11 * this.size + 15].height = 1; this.objectGrid[16 * this.size + 9].height = 1; this.objectGrid[16 * this.size + 11].height = 1; 
 			this.objectGrid[17 * this.size + 3].height = 1; this.objectGrid[19 * this.size + 13].height = 1; 
-		} else if (level == 2) {
+		} else if (level == 2) { //'Ice World'
 			//Formula: this.wallGrid[y * this.size + x]
 			
 			//Build row by row on the Y axis...
@@ -361,8 +386,171 @@ function Map(level) {
 			this.objectGrid[13 * this.size + 8].height = 1; this.objectGrid[14 * this.size + 3].height = 1; this.objectGrid[14 * this.size + 15].height = 1; this.objectGrid[19 * this.size + 6].height = 1; this.objectGrid[19 * this.size + 14].height = 1;  
 			
 			
-		} else if (level == 3) {
-			this.buildIntroLevel();			
+		} else if (level == 3) { //'Campus'
+			//Formula: this.wallGrid[y * this.size + x]
+			
+			//Build row by row on the Y axis...
+			//Y1
+			this.wallGrid[1 * this.size + 8].height = 1; this.wallGrid[1 * this.size + 10].height = 1; this.wallGrid[1 * this.size + 12].height = 1; this.wallGrid[1 * this.size + 18].height = 1;
+			//Y2
+			for(var i = 2; i <= 6; i++) {
+				this.wallGrid[2 * this.size + i].height = 1;
+			}
+				this.wallGrid[2 * this.size + 8].height = 1; this.wallGrid[2 * this.size + 10].height = 1; this.wallGrid[2 * this.size + 12].height = 1; this.wallGrid[2 * this.size + 14].height = 1;
+				this.wallGrid[2 * this.size + 16].height = 1; this.wallGrid[2 * this.size + 18].height = 1;
+			//Y3
+			this.wallGrid[3 * this.size + 4].height = 1; this.wallGrid[3 * this.size + 8].height = 1; this.wallGrid[3 * this.size + 10].height = 1; this.wallGrid[3 * this.size + 14].height = 1;
+			this.wallGrid[3 * this.size + 16].height = 1; this.wallGrid[3 * this.size + 18].height = 1;
+			//Y4
+			this.wallGrid[4 * this.size + 1].height = 1; this.wallGrid[4 * this.size + 2].height = 1;
+			for(var i = 4; i <= 6; i++) {
+				this.wallGrid[4 * this.size + i].height = 1;
+			}
+				this.wallGrid[4 * this.size + 8].height = 1;
+				for(var i = 10; i <= 18; i++) {
+					if(i != 15) this.wallGrid[4 * this.size + i].height = 1;
+				}
+			//Y5
+			this.wallGrid[5 * this.size + 4].height = 1; this.wallGrid[5 * this.size + 14].height = 1; this.wallGrid[5 * this.size + 16].height = 1;
+			//Y6
+			for(var i = 2; i <= 12; i++) {
+				this.wallGrid[6 * this.size + i].height = 1;
+			}
+				this.wallGrid[6 * this.size + 14].height = 1; this.wallGrid[6 * this.size + 16].height = 1; this.wallGrid[6 * this.size + 18].height = 1; this.wallGrid[6 * this.size + 19].height = 1;
+			//Y7
+			this.wallGrid[7 * this.size + 2].height = 1; this.wallGrid[7 * this.size + 6].height = 1; this.wallGrid[7 * this.size + 12].height = 1; this.wallGrid[7 * this.size + 16].height = 1;
+			//Y8
+			this.wallGrid[8 * this.size + 2].height = 1; this.wallGrid[8 * this.size + 4].height = 1; this.wallGrid[8 * this.size + 6].height = 1;
+			for(var i = 8; i <= 18; i++) {
+				if(i != 11 && i != 13) this.wallGrid[8 * this.size + i].height = 1;
+			}
+			//Y9
+			this.wallGrid[9 * this.size + 2].height = 1; this.wallGrid[9 * this.size + 4].height = 1; this.wallGrid[9 * this.size + 6].height = 1; this.wallGrid[9 * this.size + 8].height = 1;
+			this.wallGrid[9 * this.size + 12].height = 1; this.wallGrid[9 * this.size + 18].height = 1;
+			//Y10
+			this.wallGrid[10 * this.size + 2].height = 1; this.wallGrid[10 * this.size + 4].height = 1; this.wallGrid[10 * this.size + 6].height = 1; this.wallGrid[10 * this.size + 8].height = 1;
+			for(var i = 10; i <= 18; i++) {
+				if(i != 13) this.wallGrid[10 * this.size + i].height = 1;
+			}
+			//Y11
+			this.wallGrid[11 * this.size + 2].height = 1; this.wallGrid[11 * this.size + 4].height = 1; this.wallGrid[11 * this.size + 6].height = 1; this.wallGrid[11 * this.size + 8].height = 1;
+			this.wallGrid[11 * this.size + 10].height = 1; this.wallGrid[11 * this.size + 14].height = 1; this.wallGrid[11 * this.size + 16].height = 1;
+			//Y12
+			this.wallGrid[12 * this.size + 2].height = 1; this.wallGrid[12 * this.size + 4].height = 1; this.wallGrid[12 * this.size + 6].height = 1;
+			for(var i = 8; i <= 19; i++) {
+				if(i != 11 && i != 15 && i != 17) this.wallGrid[12 * this.size + i].height = 1;
+			}
+			//Y13
+			this.wallGrid[13 * this.size + 4].height = 1; this.wallGrid[13 * this.size + 6].height = 1; this.wallGrid[13 * this.size + 16].height = 1; this.wallGrid[13 * this.size + 18].height = 1;
+			//Y14
+			this.wallGrid[14 * this.size + 1].height = 1; this.wallGrid[14 * this.size + 2].height = 1; this.wallGrid[14 * this.size + 4].height = 1; 
+			for(var i = 6; i <= 16; i++) {
+				if(i != 11) this.wallGrid[14 * this.size + i].height = 1;
+			}
+				this.wallGrid[14 * this.size + 18].height = 1;
+			//Y15
+			this.wallGrid[15 * this.size + 4].height = 1; this.wallGrid[15 * this.size + 10].height = 1; this.wallGrid[15 * this.size + 12].height = 1; this.wallGrid[15 * this.size + 16].height = 1;
+			//Y16
+			this.wallGrid[16 * this.size + 2].height = 1;
+			for(var i = 4; i <= 8; i++) {
+				this.wallGrid[16 * this.size + i].height = 1;
+			}
+				this.wallGrid[16 * this.size + 10].height = 1; this.wallGrid[16 * this.size + 12].height = 1; this.wallGrid[16 * this.size + 14].height = 1;
+				for(var i = 16; i <= 18; i++) {
+					this.wallGrid[16 * this.size + i].height = 1;
+				}
+			//Y17
+			this.wallGrid[17 * this.size + 2].height = 1; this.wallGrid[17 * this.size + 6].height = 1; this.wallGrid[17 * this.size + 10].height = 1; this.wallGrid[17 * this.size + 12].height = 1;
+			this.wallGrid[17 * this.size + 14].height = 1; this.wallGrid[17 * this.size + 18].height = 1;
+			//Y18
+			for(var i = 2; i <= 16; i++) {
+				if(i != 5 && i != 7 && i != 13) this.wallGrid[18 * this.size + i].height = 1;
+			}
+				this.wallGrid[18 * this.size + 18].height = 1;
+			//Y19			
+			this.wallGrid[19 * this.size + 2].height = 1; this.wallGrid[19 * this.size + 6].height = 1; this.wallGrid[19 * this.size + 16].height = 1;
+			//Y20 
+			this.wallGrid[20 * this.size + 1].height = 0;		 //Victory Cell	
+			//Enemies:	
+			this.objectGrid[1 * this.size + 4].height = 1; this.objectGrid[2 * this.size + 19].height = 1; this.objectGrid[4 * this.size + 15].height = 1; this.objectGrid[5 * this.size + 11].height = 1;
+			this.objectGrid[7 * this.size + 9].height = 1; this.objectGrid[8 * this.size + 1].height = 1; this.objectGrid[12 * this.size + 17].height = 1; this.objectGrid[13 * this.size + 9].height = 1;
+			this.objectGrid[14 * this.size + 5].height = 1; this.objectGrid[18 * this.size + 5].height = 1; this.objectGrid[19 * this.size + 12].height = 1;
+					
+		} else if (level == 4) { //'Hell'
+			//Formula: this.wallGrid[y * this.size + x]
+			
+			//Build row by row on the Y axis...
+			//Y1
+			this.wallGrid[1 * this.size + 2].height = 1; this.wallGrid[1 * this.size + 6].height = 1; this.wallGrid[1 * this.size + 8].height = 1; this.wallGrid[1 * this.size + 16].height = 1;
+			//Y2
+			this.wallGrid[2 * this.size + 2].height = 1; this.wallGrid[2 * this.size + 4].height = 1; this.wallGrid[2 * this.size + 6].height = 1; this.wallGrid[2 * this.size + 8].height = 1; this.wallGrid[2 * this.size + 10].height = 1;
+			for(var i = 12; i <= 18; i++) {
+				if(i != 15) this.wallGrid[2 * this.size + i].height = 1;
+			}
+			//Y3
+			this.wallGrid[3 * this.size + 4].height = 1; this.wallGrid[3 * this.size + 6].height = 1; this.wallGrid[3 * this.size + 10].height = 1; this.wallGrid[3 * this.size + 12].height = 1; this.wallGrid[3 * this.size + 14].height = 1;
+			//Y4
+			for(var i = 1; i <= 18; i++) {
+				if(i != 5 && i != 11 & i != 13) this.wallGrid[4 * this.size + i].height = 1;
+			}
+			//Y5
+			this.wallGrid[5 * this.size + 4].height = 1; this.wallGrid[5 * this.size + 12].height = 1; this.wallGrid[5 * this.size + 18].height = 1;
+			//Y6
+			this.wallGrid[6 * this.size + 2].height = 1;
+			for(var i = 4; i <= 18; i++) {
+				if(i != 13 && i != 15) this.wallGrid[6 * this.size + i].height = 1;
+			}
+			//Y7
+			this.wallGrid[7 * this.size + 2].height = 1; this.wallGrid[7 * this.size + 4].height = 1; this.wallGrid[7 * this.size + 14].height = 1; this.wallGrid[7 * this.size + 16].height = 1;
+			//Y8
+			this.wallGrid[8 * this.size + 2].height = 1; this.wallGrid[8 * this.size + 4].height = 1;
+			for(var i = 6; i <= 10; i++) {
+				this.wallGrid[8 * this.size + i].height = 1;
+			}
+				this.wallGrid[8 * this.size + 12].height = 1; this.wallGrid[8 * this.size + 14].height = 1; this.wallGrid[8 * this.size + 16].height = 1; this.wallGrid[8 * this.size + 18].height = 1; this.wallGrid[8 * this.size + 19].height = 1;
+			//Y9
+			this.wallGrid[9 * this.size + 2].height = 1; this.wallGrid[9 * this.size + 6].height = 1; this.wallGrid[9 * this.size + 10].height = 1; this.wallGrid[9 * this.size + 12].height = 1;
+			this.wallGrid[9 * this.size + 14].height = 1; this.wallGrid[9 * this.size + 18].height = 1;
+			//Y10
+			for(var i = 2; i <= 18; i++) {
+				if(i != 9 && i != 11 & i != 13) this.wallGrid[10 * this.size + i].height = 1;
+			}
+			//Y11
+			this.wallGrid[11 * this.size + 2].height = 1; this.wallGrid[11 * this.size + 10].height = 1; this.wallGrid[11 * this.size + 12].height = 1; this.wallGrid[11 * this.size + 16].height = 1;
+			//Y12
+			for(var i = 2; i <= 18; i++) {
+				if(i != 7 && i != 9 && i != 11 && i != 15) this.wallGrid[12 * this.size + i].height = 1;
+			}
+			//Y13
+			this.wallGrid[13 * this.size + 6].height = 1; this.wallGrid[13 * this.size + 8].height = 1; this.wallGrid[13 * this.size + 10].height = 1; this.wallGrid[13 * this.size + 14].height = 1; this.wallGrid[13 * this.size + 18].height = 1;
+			//Y14
+			for(var i = 1; i <= 18; i++) {
+				if(i != 5 && i != 7 && i != 11 && i != 17) this.wallGrid[14 * this.size + i].height = 1;
+			}
+			//Y15
+			this.wallGrid[15 * this.size + 4].height = 1; this.wallGrid[15 * this.size + 6].height = 1; this.wallGrid[15 * this.size + 12].height = 1; this.wallGrid[15 * this.size + 18].height = 1;
+			//Y16
+			this.wallGrid[16 * this.size + 2].height = 1; this.wallGrid[16 * this.size + 4].height = 1;
+			for(var i = 6; i <= 18; i++) {
+				if(i != 11 && i != 13) this.wallGrid[16 * this.size + i].height = 1;
+			}
+			//Y17
+			this.wallGrid[17 * this.size + 2].height = 1; this.wallGrid[17 * this.size + 6].height = 1; this.wallGrid[17 * this.size + 10].height = 1; this.wallGrid[17 * this.size + 12].height = 1; this.wallGrid[17 * this.size + 18].height = 1;
+			//Y18
+			for(var i = 2; i <= 18; i++) {
+				if(i != 7 && i != 9 && i != 17) this.wallGrid[18 * this.size + i].height = 1;
+			}
+			//Y19			
+			this.wallGrid[19 * this.size + 8].height = 1; this.wallGrid[19 * this.size + 20].height = 0; //Victory Cell
+			//Y20 
+						
+			//Enemies:	
+			this.objectGrid[2 * this.size + 1].height = 1; this.objectGrid[2 * this.size + 7].height = 1; this.objectGrid[5 * this.size + 8].height = 1; this.objectGrid[5 * this.size + 19].height = 1;
+			this.objectGrid[7 * this.size + 8].height = 1; this.objectGrid[8 * this.size + 1].height = 1; this.objectGrid[9 * this.size + 13].height = 1; this.objectGrid[13 * this.size + 19].height = 1;	
+			this.objectGrid[15 * this.size + 5].height = 1; this.objectGrid[15 * this.size + 15].height = 1; this.objectGrid[19 * this.size + 4].height = 1; this.objectGrid[19 * this.size + 11].height = 1;
+			
+		} else {
+			this.buildIntroLevel();				
 		}
 	};
 	  
@@ -373,6 +561,18 @@ function Map(level) {
 	Map.prototype.updateProjectiles = function(point) {
 		for(var i = 0; i < this.projectileGrid.length; i++) {
 			this.projectileGrid[i].update(point, this);
+		}
+	}
+	
+	Map.prototype.updateObjects = function(player) {
+		for(var i = 0; i < this.objectGrid.length; i++) {
+			if(this.objectGrid[i].height >= 0) { //Must update EVEN 0 height frames because of weird rendering 
+				//console.log("Updating object frame, currently is: " + this.objectGrid[i].animation.currentFrame);
+				this.objectGrid[i].animation.getFrameOffset(true);
+				//console.log("Now is: " + this.objectGrid[i].animation.currentFrame);
+				//console.log("It's offset would be: " + this.objectGrid[i].animation.getFrameOffset());
+				//console.log("Number of frames is: " + this.objectGrid[i].animation.frames);
+			}
 		}
 	}
 	  

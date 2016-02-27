@@ -10,7 +10,12 @@
 	Animation.prototype.getFrameOffset = function(advance) { //Just get the offset. Or get the offset and advance.
 		if(this.frames <= 1) return 0;
 		var offset = this.currentFrame * this.offset;
-		if(advance) this.currentFrame = this.currentFrame + 1 % this.frames;
+		if(advance) {
+			this.currentFrame++;
+			if(this.currentFrame >= this.frames) {
+				this.currentFrame = 0;
+			}	
+		}
 		return offset;
 	}	
 
@@ -94,20 +99,27 @@
         this.y = y;
         this.direction = direction;	
         this.paces = 0;
+
+        this.defaultHealth = 100;
+        this.defaultAmmo = 50;
+        this.kills = 0;
+        this.health = this.defaultHealth;
+        this.ammo = this.defaultAmmo;
+        this.beingDamaged = 0;
+        this.lives = 3;
 		
-		this.defaultHealth = 100;
-		this.defaultAmmo = 51;
-		this.kills = 0;
-		this.health = 100;
-		this.ammo = 51;
-		this.beingDamaged = 0;
+        this.shot = []
+		for(var i = 0; i <= 15; i++) this.shot[i] = new Audio("assets/projectile.wav"); 
+		this.shotIndex = 0;
+
+        this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
 		
-		this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
-		
-		this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
-		this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
-		this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
-		this.weaponTicks = 0;
+		this.isPaused = true;
+
+        this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
+        this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
+        this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
+        this.weaponTicks = 0;
       }
 	  
 	  Player.prototype.updateHealth = function(number) {
@@ -151,12 +163,19 @@
 		  //If we do different spells, each spell, we check which spell is selected.
 		  //Then there would be an array corresponding to each type of spell selected.
 		  //then do the ammo, push the projectile type based on that.
-		  if(this.ammo > 0) {
+		  if(this.ammo > 0 && !this.isPaused) {
 			 this.ammo--; 
-			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));	 
-		  }	  
-		  this.weapon = this.fireWeaponIMG;
-		  controls['fire'] = false;
+			 map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
+			  this.weapon = this.fireWeaponIMG;
+			  controls['fire'] = false;	
+			  //console.log(this.shotIndex);
+			  this.shot[this.shotIndex].play();
+			  this.shotIndex++;
+			  if(this.shotIndex >= this.shot.length) {
+				  this.shotIndex = 0;
+			  }	
+				
+		  }	 
 	  }
 
       Player.prototype.update = function(controls, map, seconds, controlCodes) {
@@ -164,7 +183,7 @@
 			map.setWeather("TOXIC");	
 			this.beingDamaged = 0;
 		} else {
-			map.setWeather("RAIN");
+			map.setWeather(map.defaultWeather);
 		}
         if (controls.left) this.rotate(-Math.PI * .3 * seconds);
         if (controls.right) this.rotate(Math.PI * .3 * seconds);
@@ -184,6 +203,19 @@
 			}
 		}
       }; 
+      
+      //Restores player to starting conditions for the beginning of a level
+      Player.prototype.restore = function(x, y) {
+          this.x = x;
+          this.y = y;
+          this.direction = 0;	
+          this.paces = 0;
+          this.health = this.defaultHealth;
+          this.kills = 0;
+          this.ammo = this.defaultAmmo;
+          this.beingDamaged = 0;
+          this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+      }
 
 
       function Camera(canvas, resolution, focalLength) {
@@ -193,7 +225,7 @@
         this.resolution = resolution;
         this.spacing = this.width / resolution;
         this.focalLength = focalLength || 0.8;
-        this.range = 14;
+        this.range = 16;
         this.lightRange = 5;
         this.scale = (this.width + this.height) / 1200; 
 		this.doOnce = 0;
@@ -268,15 +300,20 @@
         var left = Math.floor(column * this.spacing);
         var width = Math.ceil(this.spacing);
         var hitWall = -1;
-		var hitObject = -1;
+		var hitObjectIndex = -1;
+		var hitObject = []
 
         while (++hitWall < ray.length && ray[hitWall].wallHeight <= 0);	//This loop runs until it finds the first section of ray with a height not 0.
-		while (++hitObject < ray.length && ray[hitObject].objectHeight <= 0);
+		while (++hitObjectIndex < ray.length) {
+			if(ray[hitObjectIndex].objectHeight > 0) {
+				hitObject.push(hitObjectIndex);
+			}
+		}
 
 		
         for (var s = ray.length - 1; s >= 0; s--) {		//Iterates backward from all Ray sections. This is not in the while loop.
           var step = ray[s];
-		  if(map.weather == 'RAIN') var weatherDebris = Math.pow(Math.random(), 3) * s;
+		  if(map.weather == 'RAIN' || map.weather == 'ACID') var weatherDebris = Math.pow(Math.random(), 3) * s;
 		  else if(map.weather == 'SNOW') var weatherDebris = 2;
 		  else if(map.weather == 'TOXIC') var weatherDebris = 3;
           var weather = (weatherDebris > 0) && this.project(0.1, angle, step.distance);	  
@@ -298,40 +335,60 @@
 			}
           }
 		  
-		  if (s === hitObject) {								//When it finds the one closest to the player, it generates the wall.
-			var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
-
-			if(entity != null) {
+		  for(var i = hitObject.length-1; i >= 0; i--) {
+				if (s === hitObject[i] && hitObject[i] < hitWall) {								//When it finds the one closest to the player, it generates the wall.
 				
-				var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2;
-				var textureX = entity.texture.width * (step.offset - offset) + entity.getFrameOffset();
-		
-				var object = this.project(step.objectHeight, angle, step.distance);				
-	
-				ctx.globalAlpha = 1;
 				
-				//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);		
-				ctx.drawImage(entity.texture.image, textureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
-				ctx.fillStyle = '#000000';
-				//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
-				ctx.globalAlpha = 0;
-				ctx.fillRect(left, object.top, width, object.height);				
-			}
+				var entity = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).animation;
+				//var test = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y));
+				
+				//SAM INSERT ACTIVATE CODE HERE:
+				//map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).isActive = true or something...
 
-          }
-          
-          ctx.fillStyle = '#ffffff';
-          ctx.globalAlpha = 0.15;
-		  if(map.weather == 'RAIN') {
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
-		  } else if (map.weather == 'SNOW') {
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 3, 3); 
-		  } else if (map.weather == 'TOXIC') {
-			  ctx.fillStyle = '#4DFE15';
-			  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
-		  }
+				if(entity != null) {
+					
+					var offset = map.getObject(Math.floor(ray[s].x), Math.floor(ray[s].y)).width/2; //So sprite doesnt render on immediate left, renders width/2 from left.
+					var textureX = entity.offset * (step.offset - offset);
+					var trueTextureX = textureX;
+					
+					var object = this.project(step.objectHeight, angle, step.distance);				
+					//
+					
+					ctx.globalAlpha = 1;
+					
+					//ctx.drawImage(image, sourceX, sourceY, sorceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+					if(textureX >= 0) {
+						trueTextureX = textureX + entity.getFrameOffset();
+					} else {
+						trueTextureX = textureX;
+					}
+					//console.log("TextureX is: " + trueTextureX);
+					ctx.drawImage(entity.texture.image, trueTextureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
+					ctx.fillStyle = '#000000';
+					//ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+					ctx.globalAlpha = 0;
+					ctx.fillRect(left, object.top, width, object.height);				
+				}
 
-        }
+			  }
+		  }	//end object for loop  
+		  
+			  ctx.fillStyle = '#ffffff';
+			  ctx.globalAlpha = 0.15;
+			  if(map.weather == 'RAIN') {
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
+			  } else if (map.weather == 'SNOW') {
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 3, 3); 
+			  } else if (map.weather == 'TOXIC') {
+				  //Toxic Green: ctx.fillStyle = '#4DFE15';
+				  ctx.fillStyle = '#7baece';
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 10, 10); 
+			  }	else if (map.weather == 'ACID') {
+				  ctx.fillStyle = '#7e680b';
+				  while (--weatherDebris > 0) ctx.fillRect(left, Math.random() * weather.top, 1, weather.height);
+			  }		  
+
+        } //end main for loop
       };
 	  
 	  Camera.prototype.drawCrosshair = function(controls) {
@@ -373,7 +430,11 @@
 		  
 		  this.ctx.fillStyle = "#FFFFFF";
 		  this.ctx.font = "20px Monotype Corsiva";
-		  this.ctx.fillText("Kills: " + player.kills, farLeft, farTop - (50 + spaceBuffer));		  
+		  this.ctx.fillText("Kills: " + player.kills, farLeft, farTop - (50 + spaceBuffer));	
+                  
+                  this.ctx.fillStyle = "#FFFFFF";
+		  this.ctx.font = "20px Monotype Corsiva";
+		  this.ctx.fillText("Lives: " + player.lives, farLeft, farTop - (70 + spaceBuffer));
 		  
 		  /* if we implement multiple spells.
 		  this.ctx.fillStyle = "#FFFFFF";
@@ -391,8 +452,8 @@
           height: wallHeight
         }; 
       };
-
-
+      
+ 
       function GameLoop() {
         this.frame = this.frame.bind(this);
         this.lastTime = 0;
@@ -410,10 +471,23 @@
         if (seconds < 0.2) this.callback(seconds);
         requestAnimationFrame(this.frame);
       };
+      
+      //parameter is an element id for an existing element on the document
+      GameLoop.prototype.showScreen = function(element) {
+          //hide game screen
+          document.getElementById("gamescreen").style.display = "none";
+          //show other screen
+          element.style.display = "block";
+          //Go back to game screen when clicked
+          document.onclick = function() {
+              element.style.display = "none";
+              document.getElementById("gamescreen").style.display = "block";
+          };
+      };
 
 	  
 	  function RayCasterEngine() {
-		   	  
+		var isPaused = true;  
 	  }
 	  
 	  RayCasterEngine.prototype.run = function() {
@@ -429,18 +503,43 @@
 		enemyGrid = this.populateEnemies(enemyGrid, map);
 		//console.log(enemyGrid);
 		loop.start(function frame(seconds) {
+			player.isPaused = false;
+			player.health = 10000;
 			map.update(seconds);
 			map.updateProjectiles(player);
+			map.updateObjects(player);
 			player.update(controls.states, map, seconds, controls.codes);
 			that.enemyGrid = that.updateEnemies(player, seconds, enemyGrid, map);
 			camera.render(player, map, controls);
+                        if(player.health == 0){
+                            if (player.lives > 1) {
+								player.isPaused = true;
+                                loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
+								player.isPaused = false;
+                                map = new Map(currentLevel); //Restart level
+                                player.restore(map.playerSpawn.x, map.playerSpawn.y);
+                                player.lives--;
+                                //player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+                                enemyGrid = that.populateEnemies(that.enemyGrid, map);
+                            }
+                            else
+								player.isPaused = true;
+                                loop.showScreen(document.getElementById("gameover"));   
+                        }
 			if(map.mapWon && currentLevel < 4) {
-				currentLevel++;
-				map = new Map(currentLevel);
-				player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
-				this.populateEnemies(enemyGrid, map);
-			} else if (currentLevel == 4 && map.mapWon) {
-				//Win Game
+							player.isPaused = true;
+                            loop.showScreen(document.getElementById("levelcomplete"));
+							player.isPaused = false;
+                            currentLevel++;
+                            map = new Map(currentLevel);
+                            player.restore(map.playerSpawn.x, map.playerSpawn.y);
+                            //player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+                            enemyGrid = that.populateEnemies(that.enemyGrid, map);
+			} 
+                        else if (currentLevel == 4 && map.mapWon) {
+                            //Win Game
+							player.isPaused = true;
+                            loop.showScreen(document.getElementById("win"));
 			}
 		}); 
 	  }
@@ -456,6 +555,8 @@
 		this.mapObject = map.getObject(initialX, initialY);
 		this.mapObject.height = .9;
 		
+		this.movementSFX = new Audio('assets/move.wav');
+		this.attackSFX = new Audio('assets/attack.wav');
 	}
 	
 	RayCasterEngine.prototype.updateEnemies = function (player, seconds, enemyGrid, map) {
@@ -466,11 +567,15 @@
 			var dy = player.y - enemy.y;
 			var dist = Math.sqrt(dx*dx + dy*dy);
 			
+			map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).distanceFromPlayer = dist;
 			//console.log("updating enemy: " + i + " distance: " + dist);
 			if (dist <= 2) {
 				player.beingDamaged = 1;
 				//console.log("enemy in range" + i);
-				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1.5 / dist);
+				player.updateHealth(map.getObject(Math.floor(enemy.x), Math.floor(enemy.y)).damageDealt * -1);
+				if(enemy.attackSFX.currentTime == 0) {
+					enemy.attackSFX.play();
+				}
 			}
 			if(dist > 2 && dist < 7) {
 				RayCasterEngine.prototype.moveEnemy(enemy, seconds, player, dy, dx, map);
@@ -497,6 +602,7 @@
 			var tempObject = map.getObject(oldX, oldY);
 			map.setObject(oldX, oldY, map.getObject(newX, newY));
 			map.setObject(newX, newY, tempObject);
+			//enemy.movementSFX.play(); Can't use while they are moving without seeing, its annoying.
 		}
 		
 		
