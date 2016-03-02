@@ -286,7 +286,7 @@ function Map(level) {
 
 			//Y20 - Victory Cell in wall
 			this.wallGrid[20 * this.size + 4].height = 0; 
-			this.objectGrid[20 * this.size + 4] = new Object(new Animation(new ImageFile('assets/trophy.png', 385, 600), 1, 385), 0, .3, false, 0);
+			this.objectGrid[20 * this.size + 4] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
 			this.objectGrid[20 * this.size + 4].height = .6;
 			
 			//Enemies:
@@ -299,6 +299,7 @@ function Map(level) {
 			//Build row by row on the Y axis...
 			//Y1
 			this.wallGrid[1 * this.size + 4].height = 1; this.wallGrid[1 * this.size + 16].height = 1; this.wallGrid[1 * this.size + 18].height = 1; this.wallGrid[1 * this.size + 20].height = 0; //Victory Cell
+			this.objectGrid[1 * this.size + 20] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0); this.objectGrid[1 * this.size + 20].height = .6;
 			//Y2
 			this.wallGrid[2 * this.size + 2].height = 1;
 			for(var i = 4; i <= 6; i++) {
@@ -472,6 +473,8 @@ function Map(level) {
 			this.wallGrid[19 * this.size + 2].height = 1; this.wallGrid[19 * this.size + 6].height = 1; this.wallGrid[19 * this.size + 16].height = 1;
 			//Y20 
 			this.wallGrid[20 * this.size + 1].height = 0;		 //Victory Cell	
+			this.objectGrid[20 * this.size + 1] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
+			this.objectGrid[20 * this.size + 1].height = .6;
 			//Enemies:	
 			this.objectGrid[1 * this.size + 4].height = 1; this.objectGrid[2 * this.size + 19].height = 1; this.objectGrid[4 * this.size + 15].height = 1; this.objectGrid[5 * this.size + 11].height = 1;
 			this.objectGrid[7 * this.size + 9].height = 1; this.objectGrid[8 * this.size + 1].height = 1; this.objectGrid[12 * this.size + 17].height = 1; this.objectGrid[13 * this.size + 9].height = 1;
@@ -543,6 +546,8 @@ function Map(level) {
 			}
 			//Y19			
 			this.wallGrid[19 * this.size + 8].height = 1; this.wallGrid[19 * this.size + 20].height = 0; //Victory Cell
+			this.objectGrid[19 * this.size + 8] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
+			this.objectGrid[19 * this.size + 8].height = .6;
 			//Y20 
 						
 			//Enemies:	
@@ -613,7 +618,10 @@ function Map(level) {
 	  Map.prototype.activate = function(x, y, value) {
 		  x = Math.floor(x);
 		  y = Math.floor(y);
-		  this.objectGrid[y * this.size + x].active = value;
+		  if(x < this.size && y < this.size && this.objectGrid[y * this.size + x].active != value && this.objectGrid[y * this.size + x].height == 1) {
+			console.log("enemy activated " + x + ", " + y);
+			this.objectGrid[y * this.size + x].active = value;
+		  }
 	  };
 	  
 	  Map.prototype.setObject = function(x, y, object) {
