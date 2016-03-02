@@ -129,7 +129,9 @@ function Player(x, y, direction) {
 };
 
 Player.prototype.updateHealth = function (number) {
-    this.health += number;
+    if(this.isPaused != true) {
+		this.health += number;
+	}
 	if(this.health > this.defaultHealth) {
 		this.health = this.defaultHealth;
 	}
@@ -206,7 +208,7 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
 	} 
     else {
         map.setWeather(map.defaultWeather);
-        this.updateHealth(.01);
+        this.updateHealth(.05);
     }
     if (controls.left)
         this.rotate(-Math.PI * .3 * seconds);
@@ -390,9 +392,14 @@ Camera.prototype.drawWeapon = function (weapon, paces, player) {
 						trueTextureX = textureX + entity.getFrameOffset();
 					} else {
 						trueTextureX = textureX;
-					}
-					//console.log("enemy activated");
+					}					
+						//console.log("enemy activated: " + ray[s].x + ", " + ray[s].y);
 					map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y), 1);
+					map.activate(Math.floor(ray[s].x) + 1, Math.floor(ray[s].y), 1);
+					map.activate(Math.floor(ray[s].x) - 1, Math.floor(ray[s].y), 1);
+					map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y) + 1, 1);
+					map.activate(Math.floor(ray[s].x), Math.floor(ray[s].y) - 1, 1);
+					
 					//console.log("TextureX is: " + trueTextureX);
 					ctx.drawImage(entity.texture.image, trueTextureX, 0, 1, entity.texture.image.height, left, object.top, width, object.height);			
 					ctx.fillStyle = '#000000';
@@ -657,7 +664,7 @@ function Enemy(initialX, initialY, map) {
     this.speed = 0;
     this.moveSpeed = .7;
     this.mapObject = map.getObject(initialX, initialY);
-    this.mapObject.height = .9;
+    this.mapObject.height = 1;
 
     this.movementSFX = new Audio('assets/move.wav');
     this.attackSFX = new Audio('assets/attack.wav');
