@@ -309,7 +309,7 @@ Camera.prototype.drawColumns = function (player, map) {
         //if(column == (this.resolution / 4)*3) console.log("ANGLE 3/4: " + angle);
         //if(column == 0) console.log("ANGLE 0: " + x);
         //if(column == this.resolution-1) console.log("ANGLE 100: " + x);
-        var ray = map.cast(player, player.direction + angle, this.range);
+        var ray = map.cast(player, player.direction + angle, this.range, enemyGrid);
         this.drawColumn(column, ray, angle, map);
     }
     this.ctx.restore();
