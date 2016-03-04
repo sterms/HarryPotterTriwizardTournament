@@ -618,7 +618,10 @@ function Map(level) {
 	  Map.prototype.activate = function(x, y, value) {
 		  x = Math.floor(x);
 		  y = Math.floor(y);
-		  this.objectGrid[y * this.size + x].active = value;
+		  if(x < this.size && y < this.size && this.objectGrid[y * this.size + x].active != value && this.objectGrid[y * this.size + x].height == 1) {
+			console.log("enemy activated " + x + ", " + y);
+			this.objectGrid[y * this.size + x].active = value;
+		  }
 	  };
 	  
 	  Map.prototype.setObject = function(x, y, object) {
