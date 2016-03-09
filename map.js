@@ -89,6 +89,7 @@ function Map(level) {
         this.light;	
 		this.weather; 
 		this.defaultWeather;
+                this.miniMap = new Image(400, 400);
 		
 		this.getLevelProperties(level);		
 		this.initializeLevel();		
@@ -117,6 +118,7 @@ function Map(level) {
 			this.weather = 'RAIN'; 
 			this.defaultWeather = 'RAIN'; 
 			this.playerSpawn = {x: 1.5, y: 1.5};
+                        this.miniMap.src = "assets/level1.jpg";
 		} else if (level == 2) {	
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 1};
@@ -126,6 +128,7 @@ function Map(level) {
 			this.weather = 'SNOW'; 
 			this.defaultWeather = 'SNOW'; 	
 			this.playerSpawn = {x: 1.5, y: 1.5};
+                        this.miniMap.src = "assets/level2.jpg";
 		} else if (level == 3) {
 			this.size = 21;
 			this.victoryCell = {x: 1, y: 20};
@@ -135,6 +138,7 @@ function Map(level) {
 			this.weather = 'NONE'; 
 			this.defaultWeather = 'NONE'; 
 			this.playerSpawn = {x: 11.5, y: 1.5};
+                        this.miniMap.src = "assets/level3.jpg";
 		} else if (level == 4) {			
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 19};
@@ -144,6 +148,7 @@ function Map(level) {
 			this.weather = 'ACID'; //Acid rain?
 			this.defaultWeather = 'ACID'; 
 			this.playerSpawn = {x: 5.5, y: 1.5};
+                        this.miniMap.src = "assets/level4.jpeg";
 		} else { //Place holding, test level
 			this.size = 16;
 			this.victoryCell = {x: 4, y:20};
