@@ -128,7 +128,7 @@ function Map(level) {
 			//Include a default for no crashing...
 			this.size = 21;
 			this.victoryCell = {x: 4, y:20};
-			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2046, 2048);
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 1024, 1024);
 			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
 			this.light = 0;	
 			this.weather = 'RAIN'; 
