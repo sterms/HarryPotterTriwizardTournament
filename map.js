@@ -67,8 +67,8 @@ Projectile.prototype.update = function(player, map) {
 			console.log("Damaged for: " + this.weaponDamage);
 			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-1 * this.weaponDamage); //Projectile Damage, if we do multiple spells call object.damage or whatever.
 			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
-				var rand = Math.random() * 10;
-				console.log(rand);
+				var rand = (Math.random() * 10);
+				console.log("Rand: " + rand);
 				if (rand > 7) {
 					console.log("generating book");
 					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 300, 300), 1, 1000), 0, 0, false, 0));
