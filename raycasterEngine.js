@@ -112,6 +112,9 @@ function Player(x, y, direction) {
     this.ammo = this.defaultAmmo;
     this.beingDamaged = 0;
     this.lives = 5;
+    this.hasMap = false;
+	this.defaultDamage = 21;
+	this.weaponDamage = this.defaultDamage;
 
     this.shot = []
     for (var i = 0; i <= 15; i++)
@@ -162,6 +165,16 @@ Player.prototype.walk = function (distance, map) {
     this.paces += distance;
     if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y)
         map.mapWon = true;
+	if(map.getObject(this.x, this.y).height == .4) {
+		console.log("Deleting book");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.weaponDamage += 10;
+	}
+	if(map.getObject(this.x, this.y).height == .45) {
+		console.log("Deleting map");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.hasMap = true;
+	}
 };
 
 Player.prototype.strafe = function (distance, map) {
@@ -180,7 +193,7 @@ Player.prototype.fireWeapon = function (mouseX, map, controls) {
     //then do the ammo, push the projectile type based on that.
     if (this.ammo > .5 && !this.isPaused) {
         this.ammo--;
-        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
+        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map, this.weaponDamage));
         this.weapon = this.fireWeaponIMG;
         controls['fire'] = false;
         //console.log(this.shotIndex);
@@ -211,9 +224,9 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
         this.updateHealth(.05);
     }
     if (controls.left)
-        this.rotate(-Math.PI * .3 * seconds);
+        this.rotate(-Math.PI * .5 * seconds);
     if (controls.right)
-        this.rotate(Math.PI * .3 * seconds);
+        this.rotate(Math.PI * .5 * seconds);
     if (controls.forward)
         this.walk(2.5 * seconds, map);
     if (controls.backward)
@@ -245,6 +258,7 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
           this.health = this.defaultHealth;
           this.kills = 0;
           this.ammo = this.defaultAmmo;
+		  this.hasMap = false;
           this.beingDamaged = 0;
           this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
       }
@@ -287,7 +301,7 @@ Camera.prototype.render = function (player, map, controls) {
     this.drawProjectiles(player, map);
     this.drawWeapon(player.weapon, player.paces, player);
     this.drawCrosshair(controls);
-    this.drawHud(player);
+    this.drawHud(player, map);
 };
 
 Camera.prototype.drawProjectiles = function (player, map) {
@@ -311,7 +325,7 @@ Camera.prototype.drawColumns = function (player, map) {
         //if(column == (this.resolution / 4)*3) console.log("ANGLE 3/4: " + angle);
         //if(column == 0) console.log("ANGLE 0: " + x);
         //if(column == this.resolution-1) console.log("ANGLE 100: " + x);
-        var ray = map.cast(player, player.direction + angle, this.range, enemyGrid);
+        var ray = map.cast(player, player.direction + angle, this.range);
         this.drawColumn(column, ray, angle, map);
     }
     this.ctx.restore();
@@ -438,7 +452,7 @@ Camera.prototype.drawCrosshair = function (controls) {
     this.ctx.stroke();
 };
 
-Camera.prototype.drawHud = function (player) {
+Camera.prototype.drawHud = function (player, map) {
     var spaceBuffer = 4; //Used for the health bar.
     var left = 15 / 2;
     var farLeft = left + player.healthIcon.offset / 2 + 20;
@@ -452,7 +466,7 @@ Camera.prototype.drawHud = function (player) {
     this.ctx.fillRect(left, top, player.healthIcon.offset / 2 + spaceBuffer, player.healthIcon.texture.image.height / 2 + spaceBuffer);
 
     this.ctx.drawImage(player.healthIcon.texture.image, player.healthIcon.getFrameOffset(), 0, player.healthIcon.offset, player.healthIcon.texture.image.height, left + (spaceBuffer / 2), top + (spaceBuffer / 2), player.healthIcon.offset / 2, player.healthIcon.texture.image.height / 2);
-
+    
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.fillRect(farLeft, farTop, 100 + spaceBuffer, 15 + spaceBuffer);
     this.ctx.fillStyle = "#B40404";
@@ -479,6 +493,26 @@ Camera.prototype.drawHud = function (player) {
      this.ctx.font = "20px Monotype Corsiva";
      this.ctx.fillText("Current Spell: " + player.controls.spells, farLeft, farTop - (50 + spaceBuffer));
      */
+    
+        
+    if (player.hasMap) {
+        //x and y coordinates of the top left corner of the mini map
+        var miniMapX = farLeft + player.healthIcon.texture.image.height / 2;
+        var miniMapY = top + (spaceBuffer / 2);
+        //side length of mini map
+        var miniMapSize = player.healthIcon.texture.image.height / 2;
+        //Position of the dot (moves with the player)
+        var dotX = miniMapX + miniMapSize/map.size * player.x;
+        var dotY = miniMapY + miniMapSize/map.size * player.y;
+        
+        //Draw white background for map
+        this.ctx.fillRect(miniMapX - spaceBuffer/2, miniMapY - spaceBuffer/2, miniMapSize + spaceBuffer, miniMapSize + spaceBuffer);
+        //Draw map
+        this.ctx.drawImage(map.miniMap, miniMapX, miniMapY, miniMapSize, miniMapSize);
+        //Draw red dot to represent player on map
+        this.ctx.fillStyle = "red";
+        this.ctx.fillRect(dotX, dotY, 2, 2);
+    }
 };
 
 Camera.prototype.project = function (height, angle, distance) {
@@ -558,6 +592,7 @@ RayCasterEngine.prototype.run = function () {
                 loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
                 player.isPaused = false;
                 map = new Map(currentLevel); //Restart level
+				player.weaponDamage = player.defaultDamage;
                 player.restore(map.playerSpawn.x, map.playerSpawn.y);
                 player.lives--;
                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
