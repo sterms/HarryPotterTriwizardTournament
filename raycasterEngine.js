@@ -112,6 +112,7 @@ function Player(x, y, direction) {
     this.ammo = this.defaultAmmo;
     this.beingDamaged = 0;
     this.lives = 5;
+    this.hasMap = true;
 
     this.shot = []
     for (var i = 0; i <= 15; i++)
@@ -287,7 +288,7 @@ Camera.prototype.render = function (player, map, controls) {
     this.drawProjectiles(player, map);
     this.drawWeapon(player.weapon, player.paces, player);
     this.drawCrosshair(controls);
-    this.drawHud(player);
+    this.drawHud(player, map);
 };
 
 Camera.prototype.drawProjectiles = function (player, map) {
@@ -438,7 +439,7 @@ Camera.prototype.drawCrosshair = function (controls) {
     this.ctx.stroke();
 };
 
-Camera.prototype.drawHud = function (player) {
+Camera.prototype.drawHud = function (player, map) {
     var spaceBuffer = 4; //Used for the health bar.
     var left = 15 / 2;
     var farLeft = left + player.healthIcon.offset / 2 + 20;
@@ -452,7 +453,7 @@ Camera.prototype.drawHud = function (player) {
     this.ctx.fillRect(left, top, player.healthIcon.offset / 2 + spaceBuffer, player.healthIcon.texture.image.height / 2 + spaceBuffer);
 
     this.ctx.drawImage(player.healthIcon.texture.image, player.healthIcon.getFrameOffset(), 0, player.healthIcon.offset, player.healthIcon.texture.image.height, left + (spaceBuffer / 2), top + (spaceBuffer / 2), player.healthIcon.offset / 2, player.healthIcon.texture.image.height / 2);
-
+    
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.fillRect(farLeft, farTop, 100 + spaceBuffer, 15 + spaceBuffer);
     this.ctx.fillStyle = "#B40404";
@@ -479,6 +480,26 @@ Camera.prototype.drawHud = function (player) {
      this.ctx.font = "20px Monotype Corsiva";
      this.ctx.fillText("Current Spell: " + player.controls.spells, farLeft, farTop - (50 + spaceBuffer));
      */
+    
+        
+    if (player.hasMap) {
+        //x and y coordinates of the top left corner of the mini map
+        var miniMapX = farLeft + player.healthIcon.texture.image.height / 2;
+        var miniMapY = top + (spaceBuffer / 2);
+        //side length of mini map
+        var miniMapSize = player.healthIcon.texture.image.height / 2;
+        //Position of the dot (moves with the player)
+        var dotX = miniMapX + miniMapSize/map.size * player.x;
+        var dotY = miniMapY + miniMapSize/map.size * player.y;
+        
+        //Draw white background for map
+        this.ctx.fillRect(miniMapX - spaceBuffer/2, miniMapY - spaceBuffer/2, miniMapSize + spaceBuffer, miniMapSize + spaceBuffer);
+        //Draw map
+        this.ctx.drawImage(map.miniMap, miniMapX, miniMapY, miniMapSize, miniMapSize);
+        //Draw red dot to represent player on map
+        this.ctx.fillStyle = "red";
+        this.ctx.fillRect(dotX, dotY, 2, 2);
+    }
 };
 
 Camera.prototype.project = function (height, angle, distance) {
