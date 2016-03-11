@@ -151,6 +151,9 @@ Player.prototype.updateWeapon = function() {
 		} else {
 			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600);
 		}
+	} else {
+		this.defaultAmmo += 50;
+		this.ammo += 50;
 	}
 }
 
