@@ -116,7 +116,7 @@ function Player(x, y, direction) {
 	this.defaultDamage = 20;
 	this.defaultWeapon = 1;
 	this.weaponDamage = this.defaultDamage;
-	this.weaponType = 1;
+	this.weaponType = 5;
 	//1 = Blue, 2 = Purple, 3 = Red, 4 = Orange, 5 = Green
 
     this.shot = []

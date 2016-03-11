@@ -567,8 +567,8 @@ function Map(level) {
 			}
 			//Y19			
 			this.wallGrid[19 * this.size + 8].height = 1; this.wallGrid[19 * this.size + 20].height = 0; //Victory Cell
-			this.objectGrid[19 * this.size + 8] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
-			this.objectGrid[19 * this.size + 8].height = .6;
+			this.objectGrid[19 * this.size + 20] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
+			this.objectGrid[19 * this.size + 20].height = .6;
 			//Y20 
 						
 			//Enemies:	
