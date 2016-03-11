@@ -224,9 +224,9 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
         this.updateHealth(.05);
     }
     if (controls.left)
-        this.rotate(-Math.PI * .3 * seconds);
+        this.rotate(-Math.PI * .5 * seconds);
     if (controls.right)
-        this.rotate(Math.PI * .3 * seconds);
+        this.rotate(Math.PI * .5 * seconds);
     if (controls.forward)
         this.walk(2.5 * seconds, map);
     if (controls.backward)
