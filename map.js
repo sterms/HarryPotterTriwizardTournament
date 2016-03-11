@@ -20,7 +20,7 @@ Object.prototype.updateHealth = function(number) {
 	}
 }
 
-function Projectile(x, y, pageX, animation, map) {
+function Projectile(x, y, pageX, animation, map, weaponDamage) {
 	this.x = x;
 	this.y = y;
 	this.pageX = pageX;
@@ -31,6 +31,7 @@ function Projectile(x, y, pageX, animation, map) {
 	this.line; //Unused
 	this.distance = 0; // Unused
 	this.scaleFactor = 1;
+	this.weaponDamage = weaponDamage;
 }
 
 Projectile.prototype.getFrameOffset = function() {
@@ -63,9 +64,23 @@ Projectile.prototype.update = function(player, map) {
 		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
 			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
-			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-21); //Projectile Damage, if we do multiple spells call object.damage or whatever.
+			console.log("Damaged for: " + this.weaponDamage);
+			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-1 * this.weaponDamage); //Projectile Damage, if we do multiple spells call object.damage or whatever.
 			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
-				map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				var rand = Math.random() * 10;
+				console.log(rand);
+				if (rand > 7) {
+					console.log("generating book");
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .4;
+				}  else if (rand < 4 && !map.mapDropped) {
+					console.log("generating map");
+					map.mapDropped = true;
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .45;
+				} else {
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				}
 				player.kills++;
 			}
 		} 
@@ -83,12 +98,14 @@ function Map(level) {
 		this.projectileGrid = [];
 		this.victoryCell = {x: 0, y: 0};
 		this.mapWon = false;
+		this.mapDropped = false;
 		this.playerSpawn = {x: 1.5, y: 1.5};
 		this.defaultWallTexture;
 		this.skybox;
         this.light;	
 		this.weather; 
 		this.defaultWeather;
+                this.miniMap = new Image(400, 400);
 		
 		this.getLevelProperties(level);		
 		this.initializeLevel();		
@@ -117,6 +134,7 @@ function Map(level) {
 			this.weather = 'RAIN'; 
 			this.defaultWeather = 'RAIN'; 
 			this.playerSpawn = {x: 1.5, y: 1.5};
+                        this.miniMap.src = "assets/level1.jpg";
 		} else if (level == 2) {	
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 1};
@@ -126,6 +144,7 @@ function Map(level) {
 			this.weather = 'SNOW'; 
 			this.defaultWeather = 'SNOW'; 	
 			this.playerSpawn = {x: 1.5, y: 1.5};
+                        this.miniMap.src = "assets/level2.jpg";
 		} else if (level == 3) {
 			this.size = 21;
 			this.victoryCell = {x: 1, y: 20};
@@ -135,6 +154,7 @@ function Map(level) {
 			this.weather = 'NONE'; 
 			this.defaultWeather = 'NONE'; 
 			this.playerSpawn = {x: 11.5, y: 1.5};
+                        this.miniMap.src = "assets/level3.jpg";
 		} else if (level == 4) {			
 			this.size = 21;
 			this.victoryCell = {x: 20, y: 19};
@@ -144,6 +164,7 @@ function Map(level) {
 			this.weather = 'ACID'; //Acid rain?
 			this.defaultWeather = 'ACID'; 
 			this.playerSpawn = {x: 5.5, y: 1.5};
+                        this.miniMap.src = "assets/level4.jpeg";
 		} else { //Place holding, test level
 			this.size = 16;
 			this.victoryCell = {x: 4, y:20};
