@@ -112,7 +112,9 @@ function Player(x, y, direction) {
     this.ammo = this.defaultAmmo;
     this.beingDamaged = 0;
     this.lives = 5;
-    this.hasMap = true;
+    this.hasMap = false;
+	this.defaultDamage = 21;
+	this.weaponDamage = this.defaultDamage;
 
     this.shot = []
     for (var i = 0; i <= 15; i++)
@@ -163,6 +165,16 @@ Player.prototype.walk = function (distance, map) {
     this.paces += distance;
     if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y)
         map.mapWon = true;
+	if(map.getObject(this.x, this.y).height == .4) {
+		console.log("Deleting book");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.weaponDamage += 10;
+	}
+	if(map.getObject(this.x, this.y).height == .45) {
+		console.log("Deleting map");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.hasMap = true;
+	}
 };
 
 Player.prototype.strafe = function (distance, map) {
@@ -181,7 +193,7 @@ Player.prototype.fireWeapon = function (mouseX, map, controls) {
     //then do the ammo, push the projectile type based on that.
     if (this.ammo > .5 && !this.isPaused) {
         this.ammo--;
-        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
+        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map, this.weaponDamage));
         this.weapon = this.fireWeaponIMG;
         controls['fire'] = false;
         //console.log(this.shotIndex);
@@ -246,6 +258,7 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
           this.health = this.defaultHealth;
           this.kills = 0;
           this.ammo = this.defaultAmmo;
+		  this.hasMap = false;
           this.beingDamaged = 0;
           this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
       }
@@ -579,6 +592,7 @@ RayCasterEngine.prototype.run = function () {
                 loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
                 player.isPaused = false;
                 map = new Map(currentLevel); //Restart level
+				player.weaponDamage = player.defaultDamage;
                 player.restore(map.playerSpawn.x, map.playerSpawn.y);
                 player.lives--;
                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
