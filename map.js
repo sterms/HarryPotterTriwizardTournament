@@ -64,20 +64,49 @@ Projectile.prototype.update = function(player, map) {
 		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
 			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
-			console.log("Damaged for: " + this.weaponDamage);
+			//console.log("Damaged for: " + this.weaponDamage);
 			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-1 * this.weaponDamage); //Projectile Damage, if we do multiple spells call object.damage or whatever.
 			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
 				var rand = (Math.random() * 10);
-				console.log("Rand: " + rand);
+				//console.log("Rand: " + rand);
 				if (rand > 7) {
-					console.log("generating book");
-					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					//console.log("generating book");
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 600, 300), 1, 1000), 0, .2, false, 0));
 					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .4;
+					
+					if(this.y - 1 >= 0) {
+						map.setObject(Math.floor(this.x), Math.floor(this.y - 1), new Object(new Animation(new ImageFile('assets/book.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.y + 1 < map.size) {
+						map.setObject(Math.floor(this.x), Math.floor(this.y + 1), new Object(new Animation(new ImageFile('assets/book.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.x - 1 >= 0) {
+						map.setObject(Math.floor(this.x - 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.x + 1 < map.size) {
+						map.setObject(Math.floor(this.x + 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					
 				}  else if (rand < 4 && !map.mapDropped) {
-					console.log("generating map");
+					//console.log("generating map");
 					map.mapDropped = true;
-					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 600, 300), 1, 1000), 0, .2, false, 0));
 					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .45;
+					
+					if(this.y - 1 >= 0) {
+						map.setObject(Math.floor(this.x), Math.floor(this.y - 1), new Object(new Animation(new ImageFile('assets/map.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.y + 1 < map.size) {
+						map.setObject(Math.floor(this.x), Math.floor(this.y + 1), new Object(new Animation(new ImageFile('assets/map.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.x - 1 >= 0) {
+						map.setObject(Math.floor(this.x - 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					if(this.x + 1 < map.size) {
+						map.setObject(Math.floor(this.x + 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 600, 300), 1, 1000), 0, .2, false, 0));
+					}
+					
+					
 				} else {
 					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
 				}
@@ -128,7 +157,7 @@ function Map(level) {
 			//Include a default for no crashing...
 			this.size = 21;
 			this.victoryCell = {x: 4, y:20};
-			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 1024, 1024);
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 1022, 1024);
 			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
 			this.light = 0;	
 			this.weather = 'RAIN'; 
@@ -352,7 +381,7 @@ function Map(level) {
 			this.wallGrid[7 * this.size + 2].height = 1; this.wallGrid[7 * this.size + 12].height = 1; this.wallGrid[7 * this.size + 14].height = 1; this.wallGrid[7 * this.size + 18].height = 1;
 			//Y8
 			for(var i = 2; i <= 16; i++) {
-				if(i != 5 && i != 9 && i != 13) this.wallGrid[8 * this.size + 2].height = 1;
+				if(i != 5 && i != 9 && i != 13) this.wallGrid[8 * this.size + i].height = 1;
 			}
 				this.wallGrid[8 * this.size + 18].height = 1;
 			//Y9

@@ -201,13 +201,43 @@ Player.prototype.walk = function (distance, map) {
     if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y)
         map.mapWon = true;
 	if(map.getObject(this.x, this.y).height == .4) {
-		console.log("Deleting book");
+		//console.log("Deleting book");
 		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
-		this.updateWeapon();
+		
+		if(this.y - 1 >= 0) {
+			map.setObject(Math.floor(this.x), Math.floor(this.y - 1), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.y + 1 < map.size) {
+			map.setObject(Math.floor(this.x), Math.floor(this.y + 1), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.x - 1 >= 0) {
+			map.setObject(Math.floor(this.x - 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.x + 1 < map.size) {
+			map.setObject(Math.floor(this.x + 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}	
+
+		this.updateWeapon();		
+		
+		
 	}
 	if(map.getObject(this.x, this.y).height == .45) {
-		console.log("Deleting map");
+		//console.log("Deleting map");
 		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		
+		if(this.y - 1 >= 0) {
+			map.setObject(Math.floor(this.x), Math.floor(this.y - 1), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.y + 1 < map.size) {
+			map.setObject(Math.floor(this.x), Math.floor(this.y + 1), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.x - 1 >= 0) {
+			map.setObject(Math.floor(this.x - 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}
+		if(this.x + 1 < map.size) {
+			map.setObject(Math.floor(this.x + 1), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		}	
+		
 		this.hasMap = true;
 	}
 };
