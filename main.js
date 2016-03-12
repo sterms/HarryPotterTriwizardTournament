@@ -46,6 +46,7 @@ Animation.prototype.isDone = function () {
 
 
 AM.queueDownload("./assets/IntroScreen.png");
+AM.queueDownload("./assets/pickcharacter.png");
 AM.queueDownload("./assets/hedwigstheme.m4a");
 AM.queueDownload("./assets/Tutorial.png");
 AM.queueDownload("./assets/dementor.png");
@@ -63,6 +64,16 @@ AM.downloadAll(function () {
     
     document.getElementById("splashscreen").onclick = function() {
         document.getElementById("splashscreen").style.display = "none";
+        document.getElementById("pickcharacter").style.display = "block"; 
+        //var harryIcon = new Image();
+        //harryIcon.src = 'assets/harryicon.png';
+       // var canvas = document.getElementById("pickcharacter");
+        //var ctx = canvas.getContext("2d");
+        //ctx.fillStyle = "white";
+        //ctx.fillRect(0, 0, 50, 50);
+    };
+    document.getElementById("pickcharacter").onclick = function() {
+        document.getElementById("pickcharacter").style.display = "none";
         document.getElementById("tutorial").style.display = "block";    
     };
     document.getElementById("tutorial").onclick = function() {
