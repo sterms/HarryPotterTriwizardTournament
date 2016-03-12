@@ -1,4 +1,5 @@
 var AM = new AssetManager();
+var selectedCharacter = null;
 /*
 function Animation(spriteSheet, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
@@ -61,32 +62,49 @@ AM.downloadAll(function () {
     
     var theme = new Audio("assets/hedwigstheme.m4a");
     theme.play();
+    var selectedCharacter;
+    
+    var gameEngine = new GameEngine();
+    gameEngine.init(ctx);
+    gameEngine.start();
+    
+    var raycaster = new RayCasterEngine();
     
     document.getElementById("splashscreen").onclick = function() {
         document.getElementById("splashscreen").style.display = "none";
         document.getElementById("pickcharacter").style.display = "block"; 
-        //var harryIcon = new Image();
-        //harryIcon.src = 'assets/harryicon.png';
-       // var canvas = document.getElementById("pickcharacter");
-        //var ctx = canvas.getContext("2d");
-        //ctx.fillStyle = "white";
-        //ctx.fillRect(0, 0, 50, 50);
     };
+    
+    /*
     document.getElementById("pickcharacter").onclick = function() {
         document.getElementById("pickcharacter").style.display = "none";
         document.getElementById("tutorial").style.display = "block";    
+    };*/
+    document.getElementById("harry").onclick = function() {
+        raycaster.character = 'harry';
+        console.log("Selected Harry");
+        document.getElementById("pickcharacter").style.display = "none";
+        document.getElementById("tutorial").style.display = "block"; 
     };
+    
+    document.getElementById("hermione").onclick = function() {
+        raycaster.character = 'hermione';
+        console.log("Selected Hermione");
+        document.getElementById("pickcharacter").style.display = "none";
+        document.getElementById("tutorial").style.display = "block"; 
+    };
+    
+    document.getElementById("ron").onclick = function() {
+        raycaster.character = 'ron';
+        console.log("Selected Ron");
+        document.getElementById("pickcharacter").style.display = "none";
+        document.getElementById("tutorial").style.display = "block"; 
+    };
+    
     document.getElementById("tutorial").onclick = function() {
         document.getElementById("tutorial").style.display = "none";
         document.getElementById("gamescreen").style.display = "block";
         theme.pause();
-		var raycaster = new RayCasterEngine();
-		raycaster.run();
+        raycaster.run();
     };
-
-	console.log("Reached.");
-    var gameEngine = new GameEngine();
-    gameEngine.init(ctx);
-    gameEngine.start();
-
 });

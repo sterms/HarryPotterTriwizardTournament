@@ -99,7 +99,7 @@ function ImageFile(src, width, height) {
     this.height = height;
 };
 
-function Player(x, y, direction) {
+function Player(selectedCharacter, x, y, direction) {
     this.x = x;
     this.y = y;
     this.direction = direction;
@@ -124,7 +124,16 @@ function Player(x, y, direction) {
         this.shot[i] = new Audio("assets/projectile.wav");
     this.shotIndex = 0;
 
-    this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+    if (selectedCharacter === 'harry') {
+        this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+    }
+    else if (selectedCharacter === 'hermione') {
+        this.healthIcon = new Animation(new ImageFile('assets/hermioneicon.png', 1076, 229), 4, 269);
+    }
+    else {
+        this.healthIcon = new Animation(new ImageFile('assets/ronicon.png', 1076, 229), 4, 269);
+    }
+    
 
     this.isPaused = true;
 
@@ -286,7 +295,7 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
           this.ammo = this.defaultAmmo;
 		  this.hasMap = false;
           this.beingDamaged = 0;
-          this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+          this.healthIcon.currentFrame = 0;
 		  this.weaponType = this.defaultWeapon - 1;
 		  this.updateWeapon();
       }
@@ -591,13 +600,14 @@ GameLoop.prototype.showScreen = function (element) {
 
 function RayCasterEngine() {
     var isPaused = true;
+    var character = null;
 }
 
 RayCasterEngine.prototype.run = function () {
     var currentLevel = 1;
     var display = document.getElementById('gameWorld');
     var map = new Map(currentLevel);
-    var player = new Player(map.playerSpawn.x, map.playerSpawn.y, 0);
+    var player = new Player(this.character, map.playerSpawn.x, map.playerSpawn.y, 0);
     var controls = new Controls();
     var camera = new Camera(display, 320, 0.8);
     var loop = new GameLoop();
