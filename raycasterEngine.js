@@ -112,7 +112,12 @@ function Player(x, y, direction) {
     this.ammo = this.defaultAmmo;
     this.beingDamaged = 0;
     this.lives = 5;
-    this.hasMap = true;
+    this.hasMap = false;
+	this.defaultDamage = 20;
+	this.defaultWeapon = 1;
+	this.weaponDamage = this.defaultDamage;
+	this.weaponType = 5;
+	//1 = Blue, 2 = Purple, 3 = Red, 4 = Orange, 5 = Green
 
     this.shot = []
     for (var i = 0; i <= 15; i++)
@@ -126,8 +131,31 @@ function Player(x, y, direction) {
     this.weapon = new ImageFile('assets/wandhand1.png', 170, 311);
     this.fireWeaponIMG = new ImageFile('assets/wandhand.png', 170, 311);
     this.idleWeaponIMG = new ImageFile('assets/wandhand1.png', 170, 311);
+	this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600);
     this.weaponTicks = 0;
 };
+
+Player.prototype.updateWeapon = function() {
+	//1 = Blue, 2 = Purple, 3 = Red, 4 = Orange, 5 = Green
+	if(this.weaponType < 5) {
+		this.weaponType++;
+		this.weaponDamage = (this.weaponType * 10) + 10;
+		if(this.weaponType == 2) {
+			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip_purp.png', 4800, 445), 8, 600);
+		} else if (this.weaponType == 3) {
+			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip_red.png', 4800, 445), 8, 600);
+		} else if (this.weaponType == 4) {
+			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip_orange.png', 4800, 445), 8, 600);
+		} else if (this.weaponType == 5) {
+			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip_green.png', 4800, 445), 8, 600);
+		} else {
+			this.projectileIMG = new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600);
+		}
+	} else {
+		this.defaultAmmo += 50;
+		this.ammo += 50;
+	}
+}
 
 Player.prototype.updateHealth = function (number) {
     if(this.isPaused != true) {
@@ -163,6 +191,16 @@ Player.prototype.walk = function (distance, map) {
     this.paces += distance;
     if (Math.floor(this.x) == map.victoryCell.x && Math.floor(this.y) == map.victoryCell.y)
         map.mapWon = true;
+	if(map.getObject(this.x, this.y).height == .4) {
+		console.log("Deleting book");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.updateWeapon();
+	}
+	if(map.getObject(this.x, this.y).height == .45) {
+		console.log("Deleting map");
+		map.setObject(this.x, this.y, new Object(new Animation(new ImageFile('assets/dementorStrip.png', 2000, 270), 6, 317), 0, .1, true, 1));
+		this.hasMap = true;
+	}
 };
 
 Player.prototype.strafe = function (distance, map) {
@@ -181,7 +219,7 @@ Player.prototype.fireWeapon = function (mouseX, map, controls) {
     //then do the ammo, push the projectile type based on that.
     if (this.ammo > .5 && !this.isPaused) {
         this.ammo--;
-        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, new Animation(new ImageFile('assets/explosionStrip.png', 4800, 445), 8, 600), map));
+        map.projectileGrid.push(new Projectile(this.x, this.y, mouseX, this.projectileIMG, map, this.weaponDamage));
         this.weapon = this.fireWeaponIMG;
         controls['fire'] = false;
         //console.log(this.shotIndex);
@@ -212,9 +250,9 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
         this.updateHealth(.05);
     }
     if (controls.left)
-        this.rotate(-Math.PI * .3 * seconds);
+        this.rotate(-Math.PI * .5 * seconds);
     if (controls.right)
-        this.rotate(Math.PI * .3 * seconds);
+        this.rotate(Math.PI * .5 * seconds);
     if (controls.forward)
         this.walk(2.5 * seconds, map);
     if (controls.backward)
@@ -246,8 +284,11 @@ Player.prototype.update = function (controls, map, seconds, controlCodes) {
           this.health = this.defaultHealth;
           this.kills = 0;
           this.ammo = this.defaultAmmo;
+		  this.hasMap = false;
           this.beingDamaged = 0;
           this.healthIcon = new Animation(new ImageFile('assets/harryicon.png', 1076, 229), 4, 269);
+		  this.weaponType = this.defaultWeapon - 1;
+		  this.updateWeapon();
       }
 
 
@@ -579,6 +620,7 @@ RayCasterEngine.prototype.run = function () {
                 loop.showScreen(document.getElementById("levelfailed")); //Show fail screen
                 player.isPaused = false;
                 map = new Map(currentLevel); //Restart level
+				//player.weaponDamage = player.defaultDamage;
                 player.restore(map.playerSpawn.x, map.playerSpawn.y);
                 player.lives--;
                 enemyGrid = that.populateEnemies(that.enemyGrid, map);
@@ -596,6 +638,7 @@ RayCasterEngine.prototype.run = function () {
             player.isPaused = false;
             currentLevel++;
             map = new Map(currentLevel);
+			player.defaultWeapon = player.weaponType; //Should carry weapons from level to level.
             player.restore(map.playerSpawn.x, map.playerSpawn.y);
             enemyGrid = that.populateEnemies(that.enemyGrid, map);
 			console.log("Enemy grid populated with: " + enemyGrid.length);

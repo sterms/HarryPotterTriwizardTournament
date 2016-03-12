@@ -20,7 +20,7 @@ Object.prototype.updateHealth = function(number) {
 	}
 }
 
-function Projectile(x, y, pageX, animation, map) {
+function Projectile(x, y, pageX, animation, map, weaponDamage) {
 	this.x = x;
 	this.y = y;
 	this.pageX = pageX;
@@ -31,6 +31,7 @@ function Projectile(x, y, pageX, animation, map) {
 	this.line; //Unused
 	this.distance = 0; // Unused
 	this.scaleFactor = 1;
+	this.weaponDamage = weaponDamage;
 }
 
 Projectile.prototype.getFrameOffset = function() {
@@ -63,9 +64,23 @@ Projectile.prototype.update = function(player, map) {
 		if(map.getObject(Math.floor(this.x), Math.floor(this.y)).height > 0) {
 			//console.log("Projectile hit object! at "  + Math.floor(this.x) + ", " + Math.floor(this.y));
 			map.projectileGrid.splice(map.projectileGrid.indexOf(this), 1);
-			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-21); //Projectile Damage, if we do multiple spells call object.damage or whatever.
+			console.log("Damaged for: " + this.weaponDamage);
+			map.getObject(Math.floor(this.x), Math.floor(this.y)).updateHealth(-1 * this.weaponDamage); //Projectile Damage, if we do multiple spells call object.damage or whatever.
 			if(map.getObject(Math.floor(this.x), Math.floor(this.y)).health <= 0) {
-				map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				var rand = (Math.random() * 10);
+				console.log("Rand: " + rand);
+				if (rand > 7) {
+					console.log("generating book");
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/book.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .4;
+				}  else if (rand < 4 && !map.mapDropped) {
+					console.log("generating map");
+					map.mapDropped = true;
+					map.setObject(Math.floor(this.x), Math.floor(this.y), new Object(new Animation(new ImageFile('assets/map.png', 300, 300), 1, 1000), 0, 0, false, 0));
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = .45;
+				} else {
+					map.getObject(Math.floor(this.x), Math.floor(this.y)).height = 0;
+				}
 				player.kills++;
 			}
 		} 
@@ -83,6 +98,7 @@ function Map(level) {
 		this.projectileGrid = [];
 		this.victoryCell = {x: 0, y: 0};
 		this.mapWon = false;
+		this.mapDropped = false;
 		this.playerSpawn = {x: 1.5, y: 1.5};
 		this.defaultWallTexture;
 		this.skybox;
@@ -112,7 +128,7 @@ function Map(level) {
 			//Include a default for no crashing...
 			this.size = 21;
 			this.victoryCell = {x: 4, y:20};
-			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 2046, 2048);
+			this.defaultWallTexture = new ImageFile('assets/hedge.jpg', 1024, 1024);
 			this.skybox = new ImageFile('assets/potterscape.jpg', 2000, 750);
 			this.light = 0;	
 			this.weather = 'RAIN'; 
@@ -551,8 +567,8 @@ function Map(level) {
 			}
 			//Y19			
 			this.wallGrid[19 * this.size + 8].height = 1; this.wallGrid[19 * this.size + 20].height = 0; //Victory Cell
-			this.objectGrid[19 * this.size + 8] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
-			this.objectGrid[19 * this.size + 8].height = .6;
+			this.objectGrid[19 * this.size + 20] = new Object(new Animation(new ImageFile('assets/trophy.png', 1000, 800), 1, 1000), 0, 0, false, 0);
+			this.objectGrid[19 * this.size + 20].height = .6;
 			//Y20 
 						
 			//Enemies:	
